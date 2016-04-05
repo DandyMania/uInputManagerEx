@@ -1,2 +1,4 @@
 # uInputManagerEx
 UnityのInputManagerのラッパー
+
+パッド毎にアナログスティックの軸の取得方法が違うのと複数パッド対応が面倒なのをなんとかしたい。
