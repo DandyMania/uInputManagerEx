@@ -236,8 +236,8 @@ public class PadManager : MonoBehaviour {
 
 			GUI.Box(new Rect(10, startY, 300, 300),"");
 
-			GUI.Label(new Rect(startX, startY , 100, 20), "Y軸");
-			GUI.Label(new Rect(startX + 50, startY , 100, 20), "X軸");
+			GUI.Label(new Rect(startX, startY , 100, 20), "左");
+			GUI.Label(new Rect(startX + 50, startY , 100, 20), "右");
 			GUI.Label(new Rect(startX + 100, startY, 100, 20), "POV");
 
 			for (int i = 1; i <= (int)Index._4P; i++)
