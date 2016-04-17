@@ -13,7 +13,7 @@ public class InputSetter
 	/// <summary>
 	/// インプット設定をリセット
 	/// </summary>
-	[MenuItem("InputTool/Reset Setting")]
+	[MenuItem("Tools/Reset Setting")]
 	public static void ResetInputManager()
 	{
 		Debug.Log("create input settings");
@@ -33,7 +33,7 @@ public class InputSetter
 	/// <summary>
 	/// Input設定を開く
 	/// </summary>
-	[MenuItem("InputTool/Open Setting")]
+	[MenuItem("Tools/Open Setting")]
 	public static void OpenInputManager()
 	{
 		EditorApplication.ExecuteMenuItem("Edit/Project Settings/Input");  
@@ -90,23 +90,57 @@ public class InputSetter
 			inputSettingGenerator.AddAxis(InputAxis.CreateKeyAxis(name, "s", "w", "down", "up"));
 		}
 
-		// 決定
+
+		// ボタン
+
+		// 0
 		{
-			var name = "Player0_OK";
-			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "z", "joystick button 0"));
+			var name = "Player0_Btn0";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "z", 0,"joystick button 0"));
 		}
 
-		// キャンセル
+		// 1
 		{
-			var name = "Player0_Cancel";
-			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "x", "joystick button 1"));
+			var name = "Player0_Btn1";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "x", 0, "joystick button 1"));
+		}
+		// 2
+		{
+			var name = "Player0_Btn2";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "a", 0, "joystick button 2"));
 		}
 
-		// ポーズ
+		// 3
 		{
-			var name = "Player0_Pause";
-			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "escape", "joystick button 7"));
+			var name = "Player0_Btn3";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "s", 0, "joystick button 3"));
 		}
+
+		// 4
+		{
+			var name = "Player0_Btn4";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "q", 0, "joystick button 4"));
+		}
+
+		// 5
+		{
+			var name = "Player0_Btn5";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "w", 0, "joystick button 5"));
+		}
+		// 6
+		{
+			var name = "Player0_Btn6";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "c", 0, "joystick button 6"));
+		}
+
+		// 7
+		{
+			var name = "Player0_Btn7";
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, "v", 0, "joystick button 7"));
+		}
+
+
+
 	}
 
 	/// <summary>
@@ -166,20 +200,18 @@ public class InputSetter
 			//inputSettingGenerator.AddAxis(InputAxis.CreateKeyAxis(name, downKey, upKey, "", ""));
 		}
 
-		// OK
-		{
+		// button
+		for(int i = 0;i<16;i++){
 			//var axis = new InputAxis();
-			var name = string.Format("Player{0}_OK", joystickNum);
-			var button = string.Format("joystick {0} button 0", joystickNum);
-			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, button, attackKey));
+			var name = string.Format("Player{0}_Btn"+i, joystickNum);
+			var button = string.Format("joystick {0} button "+i, joystickNum);
+			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, button,joystickNum, attackKey));
 		}
-		// Cancel
-		{
-			//var axis = new InputAxis();
-			var name = string.Format("Player{0}_Cancel", joystickNum);
-			var button = string.Format("joystick {0} button 1", joystickNum);
-			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, button, attackKey));
-		}
+
+		
+
+
+
 	}
 
 	/// <summary>

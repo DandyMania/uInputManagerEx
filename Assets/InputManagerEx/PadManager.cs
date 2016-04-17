@@ -48,7 +48,7 @@ public class PadManager : MonoBehaviour {
 	/// <summary>
 	///  ボタン定義
 	/// </summary>
-	public enum Button { A, B, Y, X, R, L, RightStick, LeftStick, Back, Start }
+	public enum Button { A, B, X, Y, LB, RB, Back, Start, LS, RS, LT, RT }
 
 	IEnumerator AxisSettingFunc()
 	{
@@ -63,7 +63,7 @@ public class PadManager : MonoBehaviour {
 				AxisConfigStep++;
 				AxisConfigIndex = 0;
 
-				Debug.Log("アクティブなパッド決定 " + padIndex);
+				Debug.Log("アクティブなパッド決定＆スティックキャリブレーション " + padIndex);
 				ActivePadIndex = padIndex;
 
 				break;
@@ -72,7 +72,7 @@ public class PadManager : MonoBehaviour {
 			padIndex++;
 			if (padIndex > 4) padIndex = 1;
 
-			yield return new WaitForSeconds(0.5f);
+			yield return new WaitForSeconds(0.2f);
 
 		}
 
@@ -80,7 +80,7 @@ public class PadManager : MonoBehaviour {
 		while(true){
 			if (AxisConfigIndex == 1) { RightAxisY[padIndex] = "_1"; } else { RightAxisY[padIndex] = ""; }
 			// 見つかった
-			if (GetAxis(Axis.RightStick, (Index)padIndex).y >= 0.8f)
+			if (GetAxis(Axis.RightStick, (Index)padIndex).y <= -0.8f)
 			{
 				Debug.Log("右スティックY軸めっけ");
 
@@ -97,9 +97,19 @@ public class PadManager : MonoBehaviour {
 				}
 			}
 
-			yield return new WaitForSeconds(0.5f);
+			yield return new WaitForSeconds(0.2f);
 		}
 
+		// 真ん中に戻すまで待つ
+		while (true)
+		{
+			if ( Mathf.Abs(GetAxis(Axis.RightStick, (Index)padIndex).y) <= 0.8f)
+			{
+				break;
+			}
+
+			yield return new WaitForSeconds(0.5f);
+		}
 	
 
 		// 右スティックX軸チェック
@@ -125,7 +135,7 @@ public class PadManager : MonoBehaviour {
 				}
 			}
 
-			yield return new WaitForSeconds(0.5f);
+			yield return new WaitForSeconds(0.2f);
 		}
 
 		// POV Yチェック
@@ -138,7 +148,7 @@ public class PadManager : MonoBehaviour {
 
 				AxisConfigStep++;
 				AxisConfigIndex = 0;
-				Debug.Log("POV Y軸めっけ");
+				Debug.Log("POV Y軸めっけ" + GetAxis(Axis.POV, (Index)padIndex).y.ToString());
 				break;
 
 			}
@@ -151,9 +161,19 @@ public class PadManager : MonoBehaviour {
 				}
 			}
 
-			yield return new WaitForSeconds(0.5f);
+			yield return new WaitForSeconds(0.2f);
 		}
 
+		// 真ん中に戻すまで待つ
+		while (true)
+		{
+			if (Mathf.Abs(GetAxis(Axis.POV, (Index)padIndex).y) <= 0.8f)
+			{
+				break;
+			}
+
+			yield return new WaitForSeconds(0.5f);
+		}
 
 		// POV Xチェック
 		while (true)
@@ -165,7 +185,7 @@ public class PadManager : MonoBehaviour {
 
 				AxisConfigStep++;
 				AxisConfigIndex = 0;
-				Debug.Log("POV X軸めっけ");
+				Debug.Log("POV X軸めっけ" + GetAxis(Axis.POV, (Index)padIndex).x.ToString());
 				break;
 
 			}
@@ -178,7 +198,7 @@ public class PadManager : MonoBehaviour {
 				}
 			}
 
-			yield return new WaitForSeconds(0.5f);
+			yield return new WaitForSeconds(0.2f);
 		}
 
 
@@ -202,7 +222,7 @@ public class PadManager : MonoBehaviour {
 
 		float size = 20.0f;
 
-		if (GUI.Button(new Rect(8, 20, 120, 24), "パッドコンフィグ"))
+		if (GUI.Button(new Rect(8, 20, 180, 24), "パッドコンフィグ開始"))
 		{
 			IsPadConfig = true;
 			AxisConfigStep = 0;
@@ -218,8 +238,8 @@ public class PadManager : MonoBehaviour {
 
 			switch (AxisConfigStep)
 			{
-				case 0: GUI.Label(new Rect(50, 50, 300, 20), "使うパットのボタンなんか押して！"); break;
-				case 1: GUI.Label(new Rect(50, 50, 300, 20), "右スティックY軸チェック 上に倒して！"); break;
+				case 0: GUI.Label(new Rect(50, 50, 300, 20), "スティックに触らずに使うパットのボタンなんか押して！"); break;
+				case 1: GUI.Label(new Rect(50, 50, 300, 20), "右スティックY軸チェック 下に倒して！"); break;
 				case 2: GUI.Label(new Rect(50, 50, 300, 20), "右スティックX軸チェック 右に倒して！"); break;
 				case 3: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) Y チェック 下押して！"); break;
 				case 4: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) X チェック 右押して！"); break;
@@ -234,7 +254,7 @@ public class PadManager : MonoBehaviour {
 			float startY = 100;
 			float startX = 150;
 
-			GUI.Box(new Rect(10, startY, 300, 300),"");
+			GUI.Box(new Rect(10, startY, 650, 300),"");
 
 			GUI.Label(new Rect(startX, startY , 100, 20), "左");
 			GUI.Label(new Rect(startX + 50, startY , 100, 20), "右");
@@ -251,20 +271,46 @@ public class PadManager : MonoBehaviour {
 
 				// スティック
 				GUI.Label(new Rect(startX + GetAxis(Axis.LeftStick, (Index)i).x * size, startY + 50 * i - GetAxis(Axis.LeftStick, (Index)i).y * size, 100, 20), "+");
-				GUI.Label(new Rect(startX, startY + 50 * i, 100, 20), "*");
+				GUI.Label(new Rect(startX, startY + 50 * i, 100, 20), "+");
 
 				GUI.Label(new Rect(startX + 50 + GetAxis(Axis.RightStick, (Index)i).x * size, startY + 50 * i - GetAxis(Axis.RightStick, (Index)i).y * size, 100, 20), "+");
-				GUI.Label(new Rect(startX + 50, startY + 50 * i, 100, 20), "*");
+				GUI.Label(new Rect(startX + 50, startY + 50 * i, 100, 20), "+");
 
 
 				GUI.Label(new Rect(startX + 100 + GetAxis(Axis.POV, (Index)i).x * size, startY + 50 * i + GetAxis(Axis.POV, (Index)i).y * size, 100, 20), "+");
-				GUI.Label(new Rect(startX + 100, startY + 50 * i, 100, 20), "*");
+				GUI.Label(new Rect(startX + 100, startY + 50 * i, 100, 20), "+");
 
+				// ボタンRaw
+				for (int button = 0; button < 16; button++)
+				{
+					if (GetButton(button, (Index)i))
+					{
 
-				// ボタン
+						GUI.Label(new Rect(startX + 150 + 20 * button, startY + 50 * i-20, 100, 20), "O");
+					}
+					else
+					{
+						GUI.Label(new Rect(startX + 150 + 20 * button, startY + 50 * i-20, 100, 20), "X");
+					}
+				}
 
+				// ボタンコンフィグ
+				for (int button = 0; button < 12; button++)
+				{
+					if (GetButton((Button)button, (Index)i))
+					{
+
+						GUI.Label(new Rect(startX + 150 + 20 * button, startY + 50 * i, 100, 20), "O");
+					}
+					else
+					{
+						GUI.Label(new Rect(startX + 150 + 20 * button, startY + 50 * i, 100, 20), "X");
+					}
+				}
 
 			}
+
+			
 		}
 
 
@@ -321,6 +367,47 @@ public class PadManager : MonoBehaviour {
 		}
 		return axisXY;
 	}
+
+
+	/// <summary>
+	/// ボタン押下
+	/// </summary>
+	/// <param name="button"></param>
+	/// <param name="controlIndex"></param>
+	/// <returns></returns>
+	public static bool GetButton(Button button, Index controlIndex = Index.Any)
+	{
+		string code = GetButtonName(button, controlIndex);
+		return Input.GetButton(code);
+	}
+	public static bool GetButton(int button, Index controlIndex = Index.Any)
+	{
+		return Input.GetButton("Player" + (int)controlIndex + "_Btn" + button);
+	}
+
+
+	static string GetButtonName(Button button, Index controlIndex)
+	{
+		switch (button)
+		{
+			case Button.A: return "Player" + (int)controlIndex + "_Btn" + 0;
+			case Button.B: return "Player" + (int)controlIndex + "_Btn" + 1;
+			case Button.X: return "Player" + (int)controlIndex + "_Btn" + 2;
+			case Button.Y: return "Player" + (int)controlIndex + "_Btn" + 3;
+			case Button.LB: return "Player" + (int)controlIndex + "_Btn" + 4;
+			case Button.RB: return "Player" + (int)controlIndex + "_Btn" + 5;
+			case Button.Back: return "Player" + (int)controlIndex + "_Btn" + 6;
+			case Button.Start: return "Player" + (int)controlIndex + "_Btn" + 7;
+			case Button.LS: return "Player" + (int)controlIndex + "_Btn" + 8;
+			case Button.RS: return "Player" + (int)controlIndex + "_Btn" + 9;
+			case Button.LT: return "Player" + (int)controlIndex + "_Btn" + 10;
+			case Button.RT: return "Player" + (int)controlIndex + "_Btn" + 11;
+
+		}
+
+		return "none";
+	}
+
 
 
 	// Use this for initialization

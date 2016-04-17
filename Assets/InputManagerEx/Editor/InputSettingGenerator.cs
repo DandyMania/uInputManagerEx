@@ -47,7 +47,7 @@ public class InputAxis
 	/// <param name="name">Name.</param>
 	/// <param name="positiveButton">Positive button.</param>
 	/// <param name="altPositiveButton">Alternate positive button.</param>
-	public static InputAxis CreateButton(string name, string positiveButton, string altPositiveButton)
+	public static InputAxis CreateButton(string name, string positiveButton, int joystickNum, string altPositiveButton)
 	{
 		var axis = new InputAxis();
 		axis.name = name;
@@ -57,7 +57,8 @@ public class InputAxis
 		axis.dead = 0.001f;
 		axis.sensitivity = 1000;
 		axis.type = AxisType.KeyOrMouseButton;
-		
+		axis.joyNum = joystickNum;
+
 		return axis;
 	}
 
