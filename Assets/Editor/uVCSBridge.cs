@@ -585,10 +585,20 @@ public class uVCSBridge : MonoBehaviour
 		FolderStatusMap.Remove(ASSET_ROOT);
 
         // ステータス更新失敗したらしい。。
-        if (FolderStatusMap.Count  == 0 && FileStatusMap.Count == 0 && Settings.VcsType == VCSType.SVN)
+        if (FolderStatusMap.Count  == 0 && FileStatusMap.Count == 0 )
         {
-            IsUpdateSuccess = false;
-            Debug.LogWarning("uVCSBridge Status Update Error.");
+
+			if (Settings.VcsType == VCSType.SVN)
+			{
+				IsUpdateSuccess = false;
+				Debug.LogWarning("uVCSBridge Status Update Error.");
+			}
+			else
+			{
+
+				FileStatusMap.Clear();
+				IsUpdateSuccess = true;
+			}
         }
         else
         {
