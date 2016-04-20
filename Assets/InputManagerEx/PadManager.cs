@@ -18,6 +18,9 @@ public class PadManager : MonoBehaviour {
 
 	static private int ActivePadIndex = 1; // アクティブなパッドNo
 
+	const int PadButtonMax = 16;
+	static private int[] PadButtonConvTable = new int[PadButtonMax]; // 変換テーブル
+
 
 	void Awake()
 	{
@@ -28,14 +31,15 @@ public class PadManager : MonoBehaviour {
 	public enum Axis { 
 		LeftStick,	/// LStick
 		RightStick, /// RStick
-		POV			/// POV
+		POV,			/// POV
+		LRTrigger	/// 360コントローラのLT/RT
 	};
 
 	/// <summary>
 	/// パッド番号定義
 	/// </summary>
 	public enum Index { 
-		Any, _1P, _2P, _3P, _4P,Num
+		Active, _1P, _2P, _3P, _4P,Num
 	};
 
 
@@ -44,39 +48,67 @@ public class PadManager : MonoBehaviour {
 	string[] PovX = new string[(int)Index.Num];
 	string[] PovY = new string[(int)Index.Num];
 
+	string[] LRTriggerAxis = new string[(int)Index.Num];
 
 	/// <summary>
 	///  ボタン定義
 	/// </summary>
-	public enum Button { A, B, X, Y, LB, RB, Back, Start, LS, RS, LT, RT }
+	public enum Button { A, B, X, Y, LB, RB, Back, Start, LS, RS, LT, RT,Max }
 
 	IEnumerator AxisSettingFunc()
 	{
 		int padIndex = 1;
 
 
+		//-----------------------------
 		// アクティブなパッドチェック
+		//-----------------------------
 		while(true){
 
-			if (Input.GetButton("Player" + padIndex + "_OK") || Input.GetButton("Player" + padIndex + "_Cancel"))
+
+			bool bDecide = false;
+			for (int i = 0; i < 6; i++)
 			{
-				AxisConfigStep++;
-				AxisConfigIndex = 0;
+				if (Input.GetButton("Player" + padIndex + "_Btn" + i) )
+				{
+					AxisConfigStep++;
+					AxisConfigIndex = 0;
 
-				Debug.Log("アクティブなパッド決定＆スティックキャリブレーション " + padIndex);
-				ActivePadIndex = padIndex;
+					Debug.Log("アクティブなパッド決定＆スティックキャリブレーション " + padIndex);
+					ActivePadIndex = padIndex;
 
+					bDecide = true;
+
+					// OKボタンをゼロ番に割当
+					PadButtonConvTable[(int)Button.A] = i;
+					// とりあえず連番で初期化
+					for (int ibtn = 1; ibtn < PadButtonMax; ibtn++)
+					{
+						PadButtonConvTable[ibtn] = ibtn;
+					}
+
+					break;
+				}
+			}
+			if (bDecide)
+			{
 				break;
 			}
+			else
+			{
+				padIndex++;
+				if (padIndex > 4) padIndex = 1;
 
-			padIndex++;
-			if (padIndex > 4) padIndex = 1;
+				yield return new WaitForSeconds(0.1f);
 
-			yield return new WaitForSeconds(0.2f);
-
+			}
 		}
 
+		yield return new WaitForSeconds(1.0f);
+
+		//-----------------------------
 		// 右スティックY軸チェック
+		//-----------------------------
 		while(true){
 			if (AxisConfigIndex == 1) { RightAxisY[padIndex] = "_1"; } else { RightAxisY[padIndex] = ""; }
 			// 見つかった
@@ -90,17 +122,31 @@ public class PadManager : MonoBehaviour {
 			}
 			else
 			{
-				AxisConfigIndex++;
-				if (AxisConfigIndex > 1)
-				{
-					AxisConfigIndex = 0;
+
+				if(GetButton(Button.A)){
+					// 右スティックなし
+					AxisConfigStep++;
+					RightAxisY[padIndex] = "_none";
+
+					Debug.Log("右スティック無し");
+				}else{
+					AxisConfigIndex++;
+					if (AxisConfigIndex > 1)
+					{
+						AxisConfigIndex = 0;
+					}
 				}
 			}
 
 			yield return new WaitForSeconds(0.2f);
 		}
 
+
+		yield return new WaitForSeconds(1.0f);
+
+		//-----------------------------
 		// 真ん中に戻すまで待つ
+		//-----------------------------
 		while (true)
 		{
 			if ( Mathf.Abs(GetAxis(Axis.RightStick, (Index)padIndex).y) <= 0.8f)
@@ -110,9 +156,11 @@ public class PadManager : MonoBehaviour {
 
 			yield return new WaitForSeconds(0.5f);
 		}
-	
 
+
+		//-----------------------------
 		// 右スティックX軸チェック
+		//-----------------------------
 		while (true)
 		{
 			if (AxisConfigIndex == 1) { RightAxisX[padIndex] = "_1"; } else { RightAxisX[padIndex] = ""; }
@@ -128,17 +176,28 @@ public class PadManager : MonoBehaviour {
 			}
 			else
 			{
-				AxisConfigIndex++;
-				if (AxisConfigIndex > 1)
-				{
-					AxisConfigIndex = 0;
+
+				if(GetButton(Button.A)){
+					// 右スティックなし
+					AxisConfigStep++;
+					RightAxisY[padIndex] = "_none";
+
+					Debug.Log("右スティック無し");
+				}else{
+					AxisConfigIndex++;
+					if (AxisConfigIndex > 1)
+					{
+						AxisConfigIndex = 0;
+					}
 				}
 			}
 
 			yield return new WaitForSeconds(0.2f);
 		}
 
+		//-----------------------------
 		// POV Yチェック
+		//-----------------------------
 		while (true)
 		{
 			if (AxisConfigIndex == 1) { PovY[padIndex] = "_1"; } else { PovY[padIndex] = ""; }
@@ -164,6 +223,8 @@ public class PadManager : MonoBehaviour {
 			yield return new WaitForSeconds(0.2f);
 		}
 
+		yield return new WaitForSeconds(1.0f);
+
 		// 真ん中に戻すまで待つ
 		while (true)
 		{
@@ -175,7 +236,9 @@ public class PadManager : MonoBehaviour {
 			yield return new WaitForSeconds(0.5f);
 		}
 
+		//-----------------------------
 		// POV Xチェック
+		//-----------------------------
 		while (true)
 		{
 			if (AxisConfigIndex == 1) { PovX[padIndex] = "_1"; } else { PovX[padIndex] = ""; }
@@ -195,6 +258,54 @@ public class PadManager : MonoBehaviour {
 				if (AxisConfigIndex > 1)
 				{
 					AxisConfigIndex = 0;
+				}
+				
+			}
+
+			yield return new WaitForSeconds(0.2f);
+		}
+
+
+		yield return new WaitForSeconds(1.0f);
+
+		//-----------------------------
+		// L2/R2の判定
+		//-----------------------------
+		while (true)
+		{
+
+			// 360かも
+			if ( Mathf.Abs(GetAxis(Axis.LRTrigger, (Index)padIndex).x) >= 0.8f)
+			{
+
+				AxisConfigStep++;
+				AxisConfigIndex = 0;
+				Debug.Log("L2/R2がアナログっぽいので360コントローラかも");
+				break;
+
+			}
+			else
+			{
+
+				bool bDecide = false;
+				for (int i = 0; i < PadButtonMax; i++){
+					if (Input.GetButton("Player" + padIndex + "_Btn" + i) ){
+						bDecide= true;
+					}
+				}
+
+				if(bDecide){
+
+					AxisConfigStep++;
+					AxisConfigIndex = 0;
+					LRTriggerAxis[padIndex] = "_none";
+					break;
+				}else{
+					AxisConfigIndex++;
+					if (AxisConfigIndex > 1)
+					{
+						AxisConfigIndex = 0;
+					}
 				}
 			}
 
@@ -217,7 +328,7 @@ public class PadManager : MonoBehaviour {
 	void OnGUI()
 	{
 
-		String pad = "";
+		//String pad = "";
 
 
 		float size = 20.0f;
@@ -238,11 +349,13 @@ public class PadManager : MonoBehaviour {
 
 			switch (AxisConfigStep)
 			{
-				case 0: GUI.Label(new Rect(50, 50, 300, 20), "スティックに触らずに使うパットのボタンなんか押して！"); break;
-				case 1: GUI.Label(new Rect(50, 50, 300, 20), "右スティックY軸チェック 下に倒して！"); break;
-				case 2: GUI.Label(new Rect(50, 50, 300, 20), "右スティックX軸チェック 右に倒して！"); break;
+				case 0: GUI.Label(new Rect(50, 50, 350, 20), "スティックに触らずに使うパットのOKボタン押して！"); break;
+				case 1: GUI.Label(new Rect(50, 50, 300, 20), "右スティックY軸チェック 下に倒して！\n無い場合はOKボタン押して！"); break;
+				case 2: GUI.Label(new Rect(50, 50, 300, 20), "右スティックX軸チェック 右に倒して！\n無い場合はOKボタン押して！"); break;
 				case 3: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) Y チェック 下押して！"); break;
 				case 4: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) X チェック 右押して！"); break;
+				case 5: GUI.Label(new Rect(50, 50, 300, 20), "L2/R2どっちか押して！(Xbox360判定)"); break;
+
 			}
 
 			
@@ -252,20 +365,20 @@ public class PadManager : MonoBehaviour {
 
 			
 			float startY = 100;
-			float startX = 150;
+			float startX = 100;
 
-			GUI.Box(new Rect(10, startY, 650, 300),"");
+			GUI.Box(new Rect(10, startY-50, 650, 300),"");
 
-			GUI.Label(new Rect(startX, startY , 100, 20), "左");
-			GUI.Label(new Rect(startX + 50, startY , 100, 20), "右");
-			GUI.Label(new Rect(startX + 100, startY, 100, 20), "POV");
+			GUI.Label(new Rect(startX, startY - 50, 100, 20), "左");
+			GUI.Label(new Rect(startX + 50, startY - 50, 100, 20), "右");
+			GUI.Label(new Rect(startX + 100, startY - 50, 100, 20), "POV");
 
-			for (int i = 1; i <= (int)Index._4P; i++)
+			for (int i = 0; i <= (int)Index._4P; i++)
 			{
 
 				if (ActivePadIndex == i)
 				{
-					GUI.Label(new Rect(50, startY + 50 * i, 100, 20), "アクティブ→");
+					GUI.Label(new Rect(startX-90, startY + 50 * i, 100, 20), "Active→");
 				}
 
 
@@ -293,6 +406,11 @@ public class PadManager : MonoBehaviour {
 						GUI.Label(new Rect(startX + 150 + 20 * button, startY + 50 * i-20, 100, 20), "X");
 					}
 				}
+
+				// LT/RT
+				GUI.Label(new Rect(startX + 150 + 20 * 16, startY + 50 * i - 20, 100, 20), GetAxis(Axis.LRTrigger, (Index)i).y.ToString("0.00"));
+				
+
 
 				// ボタンコンフィグ
 				for (int button = 0; button < 12; button++)
@@ -325,8 +443,13 @@ public class PadManager : MonoBehaviour {
 	/// <param name="controlIndex">The controller number</param>
 	/// <param name="raw">if raw is false then the controlIndex will be returned with a deadspot</param>
 	/// <returns></returns>
-	public static Vector2 GetAxis(Axis axis, Index controlIndex = Index.Any, bool raw = true)
+	public static Vector2 GetAxis(Axis axis, Index controlIndex = Index.Active, bool raw = true)
 	{
+
+		if (controlIndex == Index.Active)
+		{
+			controlIndex = (Index)ActivePadIndex;
+		}
 
 		string xName = "", yName = "";
 		switch (axis)
@@ -342,6 +465,10 @@ public class PadManager : MonoBehaviour {
 			case Axis.RightStick:
 				xName = "Player" + (int)controlIndex + "_RX" + instance.RightAxisX[(int)controlIndex];
 				yName = "Player" + (int)controlIndex + "_RY" + instance.RightAxisY[(int)controlIndex];
+				break;
+			case Axis.LRTrigger:
+				xName = "Player" + (int)controlIndex + "_LRTrigger" + instance.LRTriggerAxis[(int)controlIndex];
+				yName = "Player" + (int)controlIndex + "_LRTrigger"+ instance.LRTriggerAxis[(int)controlIndex];
 				break;
 		}
 
@@ -375,34 +502,34 @@ public class PadManager : MonoBehaviour {
 	/// <param name="button"></param>
 	/// <param name="controlIndex"></param>
 	/// <returns></returns>
-	public static bool GetButton(Button button, Index controlIndex = Index.Any)
+	public static bool GetButton(Button button, Index controlIndex = Index.Active)
 	{
+		if (controlIndex == Index.Active)
+		{
+			controlIndex = (Index)ActivePadIndex;
+		}
+
 		string code = GetButtonName(button, controlIndex);
 		return Input.GetButton(code);
 	}
-	public static bool GetButton(int button, Index controlIndex = Index.Any)
+	public static bool GetButton(int button, Index controlIndex = Index.Active)
 	{
+
+		if (controlIndex == Index.Active)
+		{
+			controlIndex = (Index)ActivePadIndex;
+		}
+
 		return Input.GetButton("Player" + (int)controlIndex + "_Btn" + button);
 	}
 
 
 	static string GetButtonName(Button button, Index controlIndex)
 	{
-		switch (button)
-		{
-			case Button.A: return "Player" + (int)controlIndex + "_Btn" + 0;
-			case Button.B: return "Player" + (int)controlIndex + "_Btn" + 1;
-			case Button.X: return "Player" + (int)controlIndex + "_Btn" + 2;
-			case Button.Y: return "Player" + (int)controlIndex + "_Btn" + 3;
-			case Button.LB: return "Player" + (int)controlIndex + "_Btn" + 4;
-			case Button.RB: return "Player" + (int)controlIndex + "_Btn" + 5;
-			case Button.Back: return "Player" + (int)controlIndex + "_Btn" + 6;
-			case Button.Start: return "Player" + (int)controlIndex + "_Btn" + 7;
-			case Button.LS: return "Player" + (int)controlIndex + "_Btn" + 8;
-			case Button.RS: return "Player" + (int)controlIndex + "_Btn" + 9;
-			case Button.LT: return "Player" + (int)controlIndex + "_Btn" + 10;
-			case Button.RT: return "Player" + (int)controlIndex + "_Btn" + 11;
 
+		if (button < Button.Max)
+		{
+			return "Player" + (int)controlIndex + "_Btn" + PadButtonConvTable[(int)button];
 		}
 
 		return "none";
@@ -413,7 +540,11 @@ public class PadManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-
+		// とりあえず連番で初期化
+		for (int ibtn = 0; ibtn < PadButtonMax; ibtn++)
+		{
+			PadButtonConvTable[ibtn] = ibtn;
+		}
 
 	}
 	
