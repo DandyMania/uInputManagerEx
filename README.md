@@ -1,6 +1,8 @@
 # uInputManagerEx
 UnityのInputManagerのラッパー
 
+https://twitter.com/dandymania_tw/status/717400928203046912
+
 パッド毎にボタンやアナログスティックの軸の取得方法が違うのと複数パッド対応が面倒なのを解消するのが目的。
 
 参考ページ
