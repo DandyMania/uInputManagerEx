@@ -676,6 +676,11 @@ public class PadManager : MonoBehaviour {
 					}
 
 				}
+				else if (pad.Prev[button] == false && pad.Now[button] == false)
+				{
+					pad.RepeatWait[button] = 0;
+					pad.Repeat[button] = false;
+				}
 
 			}
 			
