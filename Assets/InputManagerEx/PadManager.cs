@@ -406,7 +406,7 @@ public class PadManager : MonoBehaviour {
 			GUI.Label(new Rect(startX + 50, startY - 50, 100, 20), "右");
 			GUI.Label(new Rect(startX + 100, startY - 50, 100, 20), "POV");
 
-			for (int iPad = 0; iPad <= (int)Index._4P; iPad++)
+			for (int iPad = 0; iPad < (int)Index.Num; iPad++)
 			{
 
 				const int YOffset = 100;
@@ -535,7 +535,7 @@ public class PadManager : MonoBehaviour {
 		const float REPEAT_WAIT = 0.5f;
 		const float REPEAT_INTERVAL = 0.1f;
 
-		for (int iPad = 0; iPad <= (int)Index._4P; iPad++)
+		for (int iPad = 0; iPad < (int)Index.Num; iPad++)
 		{
 
 			PadData pad = padData[(int)iPad];
@@ -762,7 +762,8 @@ public class PadManager : MonoBehaviour {
 	void Start () {
 
 
-		for(int iPad = 0;iPad<PadMax;iPad++){
+		for (int iPad = 0; iPad <(int)Index.Num; iPad++)
+		{
 			
 			padData[iPad] = new PadData();
 			
@@ -774,8 +775,14 @@ public class PadManager : MonoBehaviour {
 			
 			}
 
-			padData[iPad].JoyStickName = Input.GetJoystickNames()[iPad];
+			try
+			{
+				padData[iPad].JoyStickName = Input.GetJoystickNames()[iPad];
+			}
+			catch (Exception ex)
+			{
 
+			}
 		}
 	}
 
