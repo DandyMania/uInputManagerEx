@@ -24,8 +24,8 @@ public class InputSetter
 			AddPlayerInputSettings(inputSettingGenerator, i);
 		}
 
-		Debug.Log("add global settings");
-		AddGlobalInputSettings(inputSettingGenerator);
+		//Debug.Log("add global settings");
+		//AddGlobalInputSettings(inputSettingGenerator);
 
 		Debug.Log("finish.");
 	}
@@ -155,24 +155,24 @@ public class InputSetter
 		string upKey = "", downKey = "", leftKey = "", rightKey = "", attackKey = "";
 		GetAxisKey(out upKey, out downKey, out leftKey, out rightKey, out attackKey, playerIndex);
 
-		int joystickNum = playerIndex + 1;
+		int joystickNum = playerIndex+1;
 
 		// LX
 		{
-			var name = string.Format("Player{0}_LX", joystickNum);
+			var name = string.Format("Player{0}_LX", playerIndex);
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name, joystickNum, 1));
 			//inputSettingGenerator.AddAxis(InputAxis.CreateKeyAxis(name, leftKey, rightKey, "", ""));
 		}
 
 		// LY
 		{
-			var name = string.Format("Player{0}_LY", joystickNum);
+			var name = string.Format("Player{0}_LY", playerIndex);
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name, joystickNum, 2));
 			//inputSettingGenerator.AddAxis(InputAxis.CreateKeyAxis(name, downKey, upKey, "", ""));
 		}
 		// RX
 		{
-			var name = string.Format("Player{0}_RX", joystickNum);
+			var name = string.Format("Player{0}_RX", playerIndex);
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name, joystickNum, 4));
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name + "_1", joystickNum, 3));
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name + "_none", joystickNum, 28));
@@ -181,7 +181,7 @@ public class InputSetter
 
 		// RY
 		{
-			var name = string.Format("Player{0}_RY", joystickNum);
+			var name = string.Format("Player{0}_RY", playerIndex);
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name, joystickNum, 5));
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name + "_1" ,joystickNum, 4));
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name + "_none", joystickNum, 28));
@@ -189,7 +189,7 @@ public class InputSetter
 		}
 		// DX
 		{
-			var name = string.Format("Player{0}_DX", joystickNum);
+			var name = string.Format("Player{0}_DX", playerIndex);
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name, joystickNum, 6));
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name + "_1", joystickNum, 5));
 			//inputSettingGenerator.AddAxis(InputAxis.CreateKeyAxis(name, leftKey, rightKey, "", ""));
@@ -197,7 +197,7 @@ public class InputSetter
 
 		// DY
 		{
-			var name = string.Format("Player{0}_DY", joystickNum);
+			var name = string.Format("Player{0}_DY", playerIndex);
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name, joystickNum, 7));
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name + "_1", joystickNum, 6));
 			//inputSettingGenerator.AddAxis(InputAxis.CreateKeyAxis(name, downKey, upKey, "", ""));
@@ -209,7 +209,7 @@ public class InputSetter
 		// button
 		for(int i = 0;i<16;i++){
 			//var axis = new InputAxis();
-			var name = string.Format("Player{0}_Btn"+i, joystickNum);
+			var name = string.Format("Player{0}_Btn" + i, playerIndex);
 			var button = string.Format("joystick {0} button "+i, joystickNum);
 			inputSettingGenerator.AddAxis(InputAxis.CreateButton(name, button,joystickNum, attackKey));
 		}
@@ -217,7 +217,7 @@ public class InputSetter
 
 		// LT/RT
 		{
-			var name = string.Format("Player{0}_LRTrigger", joystickNum);
+			var name = string.Format("Player{0}_LRTrigger", playerIndex);
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name, joystickNum, 3));
 			inputSettingGenerator.AddAxis(InputAxis.CreatePadAxis(name + "_none", joystickNum, 28));
 			//inputSettingGenerator.AddAxis(InputAxis.CreateKeyAxis(name, leftKey, rightKey, "", ""));
