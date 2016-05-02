@@ -402,6 +402,13 @@ public class PadManager : MonoBehaviour {
 		//String pad = "";
 
 
+		{// FPS
+			float fps = 1f / Time.deltaTime;
+			GUI.Label(new Rect(0, 0, 300, 20), fps.ToString("#.#") + "fps");
+
+		}
+
+
 		float size = 20.0f;
 
 		if (GUI.Button(new Rect(8, 20, 180, 24), "パッドコンフィグ開始"))
@@ -416,7 +423,8 @@ public class PadManager : MonoBehaviour {
 
 
 
-		if(IsPadConfig){
+		if (IsPadConfig)
+		{
 
 			switch (AxisConfigStep)
 			{
@@ -429,16 +437,18 @@ public class PadManager : MonoBehaviour {
 
 			}
 
-			
-
-		}else{
 
 
-			
+		}
+		else
+		{
+
+
+
 			float startY = 100;
 			float startX = 100;
 
-			GUI.Box(new Rect(10, startY-50, 650, 450),"");
+			GUI.Box(new Rect(10, startY - 50, 650, 450), "");
 
 			GUI.Label(new Rect(startX, startY - 50, 100, 20), "左");
 			GUI.Label(new Rect(startX + 50, startY - 50, 100, 20), "右");
@@ -456,7 +466,7 @@ public class PadManager : MonoBehaviour {
 
 				GUI.Label(new Rect(startX - 90, startY + YOffset * iPad - 20, 100, 20), padData[iPad].JoyStickName);
 
-	
+
 				// スティック
 				GUI.Label(new Rect(startX + GetAxis(Axis.LeftStick, (Index)iPad).x * size, startY + YOffset * iPad - GetAxis(Axis.LeftStick, (Index)iPad).y * size, 100, 20), "+");
 				GUI.Label(new Rect(startX, startY + YOffset * iPad, 100, 20), "+");
@@ -485,7 +495,7 @@ public class PadManager : MonoBehaviour {
 				// LT/RT
 				GUI.Label(new Rect(startX + 150 + 20 * 16, startY + YOffset * iPad - 20, 100, 20), GetAxis(Axis.LRTrigger, (Index)iPad).y.ToString("0.00"));
 
-				
+
 				// トリガー
 				for (int button = 0; button < (int)Button.Max; button++)
 				{
@@ -500,14 +510,14 @@ public class PadManager : MonoBehaviour {
 					}
 				}
 
-				
+
 				// Press
 				for (int button = 0; button < (int)Button.Max; button++)
 				{
 					if (GetPress((Button)button, (Index)iPad))
 					{
 
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset  * iPad + 15, 100, 20), "O");
+						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 15, 100, 20), "O");
 					}
 					else
 					{
@@ -528,7 +538,7 @@ public class PadManager : MonoBehaviour {
 						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 30, 100, 20), "X");
 					}
 				}
-				
+
 				// リリース
 				for (int button = 0; button < (int)Button.Max; button++)
 				{
@@ -539,13 +549,13 @@ public class PadManager : MonoBehaviour {
 					}
 					else
 					{
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad+ 45, 100, 20), "X");
+						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 45, 100, 20), "X");
 					}
 				}
-				
+
 			}
 
-			
+
 		}
 
 
@@ -598,91 +608,13 @@ public class PadManager : MonoBehaviour {
 				//---------------------------
 				if (pad.isXbox==true)
 				{
-					// L2/R2がアナログなので。。。
-					if (button == (int)Button.LT)
-					{
-						if (GetAxis(Axis.LRTrigger, (Index)iPad).y < -0.5f)
-						{
-
-							pad.Now[(int)Button.LT] = true;
-
-						}
-						else
-						{
-							pad.Now[(int)Button.LT] = false;
-						}
-					}
-
-
-					if (button == (int)Button.RT)
-					{
-						if (GetAxis(Axis.LRTrigger, (Index)iPad).y > 0.5f)
-						{
-
-							pad.Now[(int)Button.RT] = true;
-						}
-						else
-						{
-							pad.Now[(int)Button.RT] = false;
-						}
-					}
-
-					// 十字キーがハットなので。。。
-					if (button == (int)Button.UP)
-					{
-
-						if (GetAxis(Axis.POV, (Index)iPad).y <= -0.8f)
-						{
-							pad.Now[(int)Button.UP] = true;
-
-						}
-						else
-						{
-							pad.Now[(int)Button.UP] = false;
-						}
-					}
-					if (button == (int)Button.DOWN)
-					{
-
-						if (GetAxis(Axis.POV, (Index)iPad).y >= 0.8f)
-						{
-							pad.Now[(int)Button.DOWN] = true;
-
-						}
-						else
-						{
-							pad.Now[(int)Button.DOWN] = false;
-						}
-					}
-					if (button == (int)Button.LEFT)
-					{
-
-						if (GetAxis(Axis.POV, (Index)iPad).x <= -0.8f)
-						{
-							pad.Now[(int)Button.LEFT] = true;
-
-						}
-						else
-						{
-							pad.Now[(int)Button.LEFT] = false;
-						}
-					}
-					if (button == (int)Button.RIGHT)
-					{
-
-						if (GetAxis(Axis.POV, (Index)iPad).x >= 0.8f)
-						{
-							pad.Now[(int)Button.RIGHT] = true;
-
-						}
-						else
-						{
-							pad.Now[(int)Button.RIGHT] = false;
-						}
-					}
+					UpdateX360(ref pad, (Index)iPad, (Button)button);
 
 				}
+
+				//---------------------------
 				// キーリピート処理
+				//---------------------------
 				pad.Repeat[button] = false;
 				if (pad.Prev[button] == false && pad.Now[button] == true)
 				{
@@ -713,6 +645,102 @@ public class PadManager : MonoBehaviour {
 
 		//Debug.Log("Update");
 
+	}
+
+
+	private void UpdateX360(ref PadData pad, Index iPad, Button button)
+	{
+		// L2/R2がアナログなので。。。
+		switch (button)
+		{
+			case Button.LT:
+				{
+					if (GetAxis(Axis.LRTrigger, (Index)iPad).y < -0.5f)
+					{
+
+						pad.Now[(int)Button.LT] = true;
+
+					}
+					else
+					{
+						pad.Now[(int)Button.LT] = false;
+					}
+				}
+				break;
+			case Button.RT:
+				{
+					if (GetAxis(Axis.LRTrigger, (Index)iPad).y > 0.5f)
+					{
+
+						pad.Now[(int)Button.RT] = true;
+					}
+					else
+					{
+						pad.Now[(int)Button.RT] = false;
+					}
+				}
+				break;
+			case Button.UP:
+				{
+
+					if (GetAxis(Axis.POV, (Index)iPad).y <= -0.8f)
+					{
+						pad.Now[(int)Button.UP] = true;
+
+					}
+					else
+					{
+						pad.Now[(int)Button.UP] = false;
+					}
+				}
+				break;
+			case Button.DOWN:
+				{
+					{
+
+						if (GetAxis(Axis.POV, (Index)iPad).y >= 0.8f)
+						{
+							pad.Now[(int)Button.DOWN] = true;
+
+						}
+						else
+						{
+							pad.Now[(int)Button.DOWN] = false;
+						}
+					}
+				}
+				break;
+			case Button.LEFT:
+				{
+
+					if (GetAxis(Axis.POV, (Index)iPad).x <= -0.8f)
+					{
+						pad.Now[(int)Button.LEFT] = true;
+
+					}
+					else
+					{
+						pad.Now[(int)Button.LEFT] = false;
+					}
+				}
+				break;
+			case Button.RIGHT:
+				{
+					{
+
+						if (GetAxis(Axis.POV, (Index)iPad).x >= 0.8f)
+						{
+							pad.Now[(int)Button.RIGHT] = true;
+
+						}
+						else
+						{
+							pad.Now[(int)Button.RIGHT] = false;
+						}
+					}
+					break;
+				}
+		}
 	}
 
 	/// <summary>
@@ -797,7 +825,19 @@ public class PadManager : MonoBehaviour {
 	/// <returns></returns>
 	public static bool GetPress(Button button, Index controlIndex = Index.Active)
 	{
-		if (controlIndex == Index.Active)
+		if (controlIndex == Index.Any)
+		{
+			
+			for (int iPad = 0; iPad < (int)Index.Num; iPad++){
+				PadData p = instance.padData[(int)iPad];
+				if (p.Now[(int)button] == true)
+				{
+					return true;
+				}
+			}
+			return false;
+
+		}else if (controlIndex == Index.Active)
 		{
 			controlIndex = (Index)ActivePadIndex;
 		}
@@ -806,7 +846,7 @@ public class PadManager : MonoBehaviour {
 		//return Input.GetButton(code);
 
 		PadData pad = instance.padData[(int)controlIndex];
-		return (pad.Now[pad.ConvTable[(int)button]] == true);
+		return (pad.Now[(int)button] == true);
 	}
 
 	/// <summary>
@@ -817,7 +857,21 @@ public class PadManager : MonoBehaviour {
 	/// <returns></returns>
 	public static bool GetTrigger(Button button, Index controlIndex = Index.Active)
 	{
-		if (controlIndex == Index.Active)
+		if (controlIndex == Index.Any)
+		{
+
+			for (int iPad = 0; iPad < (int)Index.Num; iPad++)
+			{
+				PadData p = instance.padData[(int)iPad];
+				if (p.Prev[(int)button] == false && p.Now[(int)button] == true)
+				{
+					return true;
+				}
+			}
+			return false;
+
+		}
+		else if (controlIndex == Index.Active)
 		{
 			controlIndex = (Index)ActivePadIndex;
 		}
@@ -834,7 +888,21 @@ public class PadManager : MonoBehaviour {
 	/// <returns></returns>
 	public static bool GetRelease(Button button, Index controlIndex = Index.Active)
 	{
-		if (controlIndex == Index.Active)
+		if (controlIndex == Index.Any)
+		{
+
+			for (int iPad = 0; iPad < (int)Index.Num; iPad++)
+			{
+				PadData p = instance.padData[(int)iPad];
+				if (p.Prev[(int)button] == true && p.Now[(int)button] == false)
+				{
+					return true;
+				}
+			}
+			return false;
+
+		}
+		else if (controlIndex == Index.Active)
 		{
 			controlIndex = (Index)ActivePadIndex;
 		}
@@ -852,7 +920,21 @@ public class PadManager : MonoBehaviour {
 	/// <returns></returns>
 	public static bool GetRepeat(Button button, Index controlIndex = Index.Active)
 	{
-		if (controlIndex == Index.Active)
+		if (controlIndex == Index.Any)
+		{
+
+			for (int iPad = 0; iPad < (int)Index.Num; iPad++)
+			{
+				PadData p = instance.padData[(int)iPad];
+				if (p.Repeat[(int)button] == true)
+				{
+					return true;
+				}
+			}
+			return false;
+
+		}
+		else if (controlIndex == Index.Active)
 		{
 			controlIndex = (Index)ActivePadIndex;
 		}
