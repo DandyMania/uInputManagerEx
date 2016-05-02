@@ -921,19 +921,22 @@ public class PadManager : MonoBehaviour {
 				}
 				*/
 
-				// 極座標変換 + デッドゾーン処理(非線形)
-				float angle  = Mathf.Atan2(axisXY.y, axisXY.x);
-				float len = Mathf.Sqrt(Mathf.Pow(axisXY.x, 2) + Mathf.Pow(axisXY.y, 2));
-
- 
-				// 変化量を非線形にしてデッド・ゾーン対応
-				len = Mathf.Sqrt(Mathf.Pow(len,2));
-
-				axisXY = new Vector2(len * Mathf.Cos(angle), len * Mathf.Sin(angle));
-
-				if (len > 1.0f)
+				if (axis == Axis.LeftStick || axis == Axis.RightStick)
 				{
-					axisXY /= axisXY.magnitude;
+					// 極座標変換 + デッドゾーン処理(非線形)
+					float angle = Mathf.Atan2(axisXY.y, axisXY.x);
+					float len = Mathf.Sqrt(Mathf.Pow(axisXY.x, 2) + Mathf.Pow(axisXY.y, 2));
+
+
+					// 変化量を非線形にしてデッド・ゾーン対応
+					len = Mathf.Sqrt(Mathf.Pow(len, 2));
+
+					axisXY = new Vector2(len * Mathf.Cos(angle), len * Mathf.Sin(angle));
+
+					if (len > 1.0f)
+					{
+						axisXY /= axisXY.magnitude;
+					}
 				}
 			}
 			else
