@@ -24,6 +24,7 @@
 
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 //using UnityEditor;
 
@@ -92,6 +93,10 @@ public class PadManager : MonoBehaviour {
 		public string PovY;
 		public string LRTriggerAxis;
 
+		// スティックの中心
+		public Vector2 LAxisOffset;
+		public Vector2 RAxisOffset; 
+
 		public int[] ConvTable = new int[(int)Button.Max]; // 変換テーブル
 
 		public bool[] Prev = new bool[(int)Button.Max]; // 前のフレームの押下情報
@@ -101,6 +106,10 @@ public class PadManager : MonoBehaviour {
 		public bool[] Repeat = new bool[(int)Button.Max]; // キーリピート
 
 
+
+		// スティック座標デバッグ表示
+		public Queue<Vector2> LStickPos = new Queue<Vector2>();
+		public Queue<Vector2> RStickPos = new Queue<Vector2>();
 	};
 
 	PadData[] padData = new PadData[(int)Index.Num];
@@ -112,34 +121,54 @@ public class PadManager : MonoBehaviour {
 
 		AxisConfigStep = 0;
 		AxisConfigIndex = 0;
-		ActivePadIndex = 0;
+		//ActivePadIndex = 0;
+
+		// パッド名初期化
+		for (int iPad = 0; iPad < (int)Index.Num; iPad++)
+		{
+			try
+			{
+				padData[iPad].JoyStickName = Input.GetJoystickNames()[iPad];
+			}
+			catch (Exception ex)
+			{
+				Debug.Log(ex.Message);
+			}
+		}
 
 		//-----------------------------
 		// アクティブなパッドチェック
 		//-----------------------------
-		while(true){
+		while (true)
+		{
 
 
 			bool bDecide = false;
 			for (int i = 0; i < 6; i++)
 			{
-				if (Input.GetButton("Player" + padIndex + "_Btn" + i) )
+				if (Input.GetButton("Player" + padIndex + "_Btn" + i))
 				{
 					AxisConfigStep++;
 					AxisConfigIndex = 0;
 
 					PadData pad = instance.padData[(int)padIndex];
 
-					Debug.Log("アクティブなパッド決定＆スティックキャリブレーション " + padIndex + " " + pad.JoyStickName);
+					Debug.Log("アクティブなパッド決定" + padIndex + " " + pad.JoyStickName);
 					ActivePadIndex = padIndex;
 
 					bDecide = true;
 
 					// OKボタンをゼロ番に割当
-					
+
 					pad.ConvTable[i] = (int)Button.A;
 					pad.ConvTable[(int)Button.A] = i;
-					
+
+
+					// 一旦スティックのキャリブレーションを初期化
+					pad.RAxisOffset.x = 0.0f;
+					pad.RAxisOffset.y = 0.0f;
+					pad.LAxisOffset.x = 0.0f;
+					pad.LAxisOffset.y = 0.0f;
 
 					break;
 				}
@@ -163,7 +192,8 @@ public class PadManager : MonoBehaviour {
 		//-----------------------------
 		// 右スティックY軸チェック
 		//-----------------------------
-		while(true){
+		while (true)
+		{
 
 
 			PadData pad = instance.padData[(int)padIndex];
@@ -180,13 +210,16 @@ public class PadManager : MonoBehaviour {
 			else
 			{
 
-				if(GetTrigger(Button.A)){
+				if (GetTrigger(Button.A))
+				{
 					// 右スティックなし
 					AxisConfigStep++;
 					pad.RightAxisY = "_none";
 
 					Debug.Log("右スティック無し");
-				}else{
+				}
+				else
+				{
 					AxisConfigIndex++;
 					if (AxisConfigIndex > 1)
 					{
@@ -206,7 +239,7 @@ public class PadManager : MonoBehaviour {
 		//-----------------------------
 		while (true)
 		{
-			if ( Mathf.Abs(GetAxis(Axis.RightStick, (Index)padIndex).y) <= 0.8f)
+			if (Mathf.Abs(GetAxis(Axis.RightStick, (Index)padIndex).y) <= 0.8f)
 			{
 				break;
 			}
@@ -222,7 +255,7 @@ public class PadManager : MonoBehaviour {
 		{
 
 			PadData pad = instance.padData[(int)padIndex];
-			if (AxisConfigIndex == 1) { pad.RightAxisX= "_1"; } else { pad.RightAxisX = ""; }
+			if (AxisConfigIndex == 1) { pad.RightAxisX = "_1"; } else { pad.RightAxisX = ""; }
 			// 見つかった
 			if (GetAxis(Axis.RightStick, (Index)padIndex).x >= 0.8f)
 			{
@@ -243,7 +276,9 @@ public class PadManager : MonoBehaviour {
 					pad.RightAxisY = "_none";
 
 					Debug.Log("右スティック無し");
-				}else{
+				}
+				else
+				{
 					AxisConfigIndex++;
 					if (AxisConfigIndex > 1)
 					{
@@ -323,7 +358,7 @@ public class PadManager : MonoBehaviour {
 				{
 					AxisConfigIndex = 0;
 				}
-				
+
 			}
 
 			yield return new WaitForSeconds(0.2f);
@@ -340,7 +375,7 @@ public class PadManager : MonoBehaviour {
 
 			// 360かも
 			PadData pad = instance.padData[(int)padIndex];
-			if ( Mathf.Abs(GetAxis(Axis.LRTrigger, (Index)padIndex).x) >= 0.8f)
+			if (Mathf.Abs(GetAxis(Axis.LRTrigger, (Index)padIndex).x) >= 0.8f)
 			{
 
 				AxisConfigStep++;
@@ -356,22 +391,27 @@ public class PadManager : MonoBehaviour {
 			{
 
 				bool bDecide = false;
-				for (int i = 0; i < PadButtonMax; i++){
-					if (Input.GetButton("Player" + padIndex + "_Btn" + i) ){
-						bDecide= true;
+				for (int i = 0; i < PadButtonMax; i++)
+				{
+					if (Input.GetButton("Player" + padIndex + "_Btn" + i))
+					{
+						bDecide = true;
 					}
 				}
 
-				if(bDecide){
+				if (bDecide)
+				{
 
 					AxisConfigStep++;
 					AxisConfigIndex = 0;
-					
+
 					pad.LRTriggerAxis = "_none";
-					
+
 
 					break;
-				}else{
+				}
+				else
+				{
 					AxisConfigIndex++;
 					if (AxisConfigIndex > 1)
 					{
@@ -386,14 +426,57 @@ public class PadManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(1.0f);
 
+
+		{// スティックキャリブレーション
+
+			PadData pad = instance.padData[(int)padIndex];
+			pad.LAxisOffset = GetAxis(Axis.LeftStick, (Index)ActivePadIndex);
+			pad.RAxisOffset = GetAxis(Axis.RightStick, (Index)ActivePadIndex);
+
+		}
+
+
+
+
 		Debug.Log("終わり");
 
-		IsPadConfig =false;
+
+		//------------------------
+		// 設定保存
+		//------------------------
+		PlayerPrefs.SetInt("ActivePad", ActivePadIndex);
+
+		{
+			// パッド設定
+			PadData p = instance.padData[(int)ActivePadIndex];
+			if (p.JoyStickName.Length > 0)
+			{
+
+				PlayerPrefs.SetString(p.JoyStickName + "_RightAxisX", p.RightAxisX);
+				PlayerPrefs.SetString(p.JoyStickName + "_RightAxisY", p.RightAxisY);
+				PlayerPrefs.SetString(p.JoyStickName + "_PovX", p.PovX);
+				PlayerPrefs.SetString(p.JoyStickName + "_PovY", p.PovY);
+
+				// 軸ズレ
+				PlayerPrefs.SetFloat(p.JoyStickName + "_RightAxisX_off", p.RAxisOffset.x);
+				PlayerPrefs.SetFloat(p.JoyStickName + "_RightAxisY_off", p.RAxisOffset.y);
+				PlayerPrefs.SetFloat(p.JoyStickName + "_LeftAxisX_off", p.LAxisOffset.x);
+				PlayerPrefs.SetFloat(p.JoyStickName + "_LeftAxisY_off", p.LAxisOffset.y);
+
+				PlayerPrefs.SetInt(p.JoyStickName + "_isXbox", p.isXbox == false ? 1 : 2);
+
+			}
+		}
+
+
+
+		IsPadConfig = false;
 
 		yield break;
 	}
 
 
+	
 
 
 	void OnGUI()
@@ -428,12 +511,12 @@ public class PadManager : MonoBehaviour {
 
 			switch (AxisConfigStep)
 			{
-				case 0: GUI.Label(new Rect(50, 50, 350, 20), "スティックに触らずに使うパットのOKボタン押して！"); break;
+				case 0: GUI.Label(new Rect(50, 50, 350, 20), "使うパットのOKボタン押して！"); break;
 				case 1: GUI.Label(new Rect(50, 50, 300, 20), "右スティックY軸チェック 下に倒して！\n無い場合はOKボタン押して！"); break;
 				case 2: GUI.Label(new Rect(50, 50, 300, 20), "右スティックX軸チェック 右に倒して！\n無い場合はOKボタン押して！"); break;
 				case 3: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) Y チェック 下押して！"); break;
 				case 4: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) X チェック 右押して！"); break;
-				case 5: GUI.Label(new Rect(50, 50, 300, 20), "L2/R2どっちか押して！(Xbox360判定)"); break;
+				case 5: GUI.Label(new Rect(50, 50, 300, 20), "スティックに触らずにL2/R2どっちか押して！(Xbox360判定)"); break;
 
 			}
 
@@ -471,8 +554,32 @@ public class PadManager : MonoBehaviour {
 				GUI.Label(new Rect(startX + GetAxis(Axis.LeftStick, (Index)iPad).x * size, startY + YOffset * iPad - GetAxis(Axis.LeftStick, (Index)iPad).y * size, 100, 20), "+");
 				GUI.Label(new Rect(startX, startY + YOffset * iPad, 100, 20), "+");
 
+				// スティック座標デバッグ
+				padData[iPad].LStickPos.Enqueue(GetAxis(Axis.LeftStick, (Index)iPad));
+				if (padData[iPad].LStickPos.Count > 128)
+				{
+					padData[iPad].LStickPos.Dequeue();
+				}
+				foreach (Vector2 pos in padData[iPad].LStickPos)
+				{
+					GUI.Label(new Rect(startX + pos.x * size, startY + YOffset * iPad - pos.y * size, 100, 20), "+");
+				}
+
+
 				GUI.Label(new Rect(startX + 50 + GetAxis(Axis.RightStick, (Index)iPad).x * size, startY + YOffset * iPad - GetAxis(Axis.RightStick, (Index)iPad).y * size, 100, 20), "+");
 				GUI.Label(new Rect(startX + 50, startY + YOffset * iPad, 100, 20), "+");
+
+
+				// スティック座標デバッグ
+				padData[iPad].RStickPos.Enqueue(GetAxis(Axis.RightStick, (Index)iPad));
+				if (padData[iPad].RStickPos.Count > 128)
+				{
+					padData[iPad].RStickPos.Dequeue();
+				}
+				foreach (Vector2 pos in padData[iPad].RStickPos)
+				{
+					GUI.Label(new Rect(startX + 50 + pos.x * size, startY + YOffset * iPad - pos.y * size, 100, 20), "+");
+				}
 
 
 				GUI.Label(new Rect(startX + 100 + GetAxis(Axis.POV, (Index)iPad).x * size, startY + YOffset * iPad + GetAxis(Axis.POV, (Index)iPad).y * size, 100, 20), "+");
@@ -761,7 +868,7 @@ public class PadManager : MonoBehaviour {
 	/// <param name="controlIndex">The controller number</param>
 	/// <param name="raw">if raw is false then the controlIndex will be returned with a deadspot</param>
 	/// <returns></returns>
-	public static Vector2 GetAxis(Axis axis, Index controlIndex = Index.Active, bool raw = true)
+	public static Vector2 GetAxis(Axis axis, Index controlIndex = Index.Active, bool raw = false)
 	{
 
 		if (controlIndex == Index.Active)
@@ -801,6 +908,33 @@ public class PadManager : MonoBehaviour {
 			{
 				axisXY.x = Input.GetAxis(xName);
 				axisXY.y = -Input.GetAxis(yName);
+
+				// todo:ズレ補正
+				/*
+				if (axis == Axis.LeftStick)
+				{
+					axisXY -= pad.LAxisOffset;
+				}
+				else if (axis == Axis.RightStick)
+				{
+					axisXY -= pad.RAxisOffset;
+				}
+				*/
+
+				// 極座標変換 + デッドゾーン処理(非線形)
+				float angle  = Mathf.Atan2(axisXY.y, axisXY.x);
+				float len = Mathf.Sqrt(Mathf.Pow(axisXY.x, 2) + Mathf.Pow(axisXY.y, 2));
+
+ 
+				// 変化量を非線形にしてデッド・ゾーン対応
+				len = Mathf.Sqrt(Mathf.Pow(len,2));
+
+				axisXY = new Vector2(len * Mathf.Cos(angle), len * Mathf.Sin(angle));
+
+				if (len > 1.0f)
+				{
+					axisXY /= axisXY.magnitude;
+				}
 			}
 			else
 			{
@@ -975,31 +1109,57 @@ public class PadManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+		// 設定取得
+		ActivePadIndex = PlayerPrefs.GetInt("ActivePad");
 
 		for (int iPad = 0; iPad <(int)Index.Num; iPad++)
 		{
 			
 			padData[iPad] = new PadData();
-			
+			PadData p = padData[iPad];
+
+
 			// とりあえず連番で初期化
 			for (int ibtn = 0; ibtn <(int) Button.Max; ibtn++)
 			{
-				padData[iPad].ConvTable[ibtn] = ibtn;
+				p.ConvTable[ibtn] = ibtn;
 
 			
 			}
-			padData[iPad].isXbox = false;
 
 			try
 			{
-				padData[iPad].JoyStickName = Input.GetJoystickNames()[iPad];
+				p.JoyStickName = Input.GetJoystickNames()[iPad];
 
 
-				// 360コントローラを名前で判定
-				if (padData[iPad].JoyStickName.IndexOf("XBOX 360") >= 0)
+
+				p.RightAxisX = PlayerPrefs.GetString(p.JoyStickName + "_RightAxisX");
+				p.RightAxisY = PlayerPrefs.GetString(p.JoyStickName + "_RightAxisY");
+				p.PovX = PlayerPrefs.GetString(p.JoyStickName + "_PovX");
+				p.PovY = PlayerPrefs.GetString(p.JoyStickName + "_PovY");
+
+				p.RAxisOffset.x = PlayerPrefs.GetFloat(p.JoyStickName + "_RightAxisX_off");
+				p.RAxisOffset.y = PlayerPrefs.GetFloat(p.JoyStickName + "_RightAxisY_off");
+				p.LAxisOffset.x = PlayerPrefs.GetFloat(p.JoyStickName + "_LeftAxisX_off");
+				p.LAxisOffset.y = PlayerPrefs.GetFloat(p.JoyStickName + "_LeftAxisY_off");
+
+
+				if (PlayerPrefs.GetInt(p.JoyStickName + "_isXbox") == 0)
 				{
-					padData[iPad].isXbox = true;
+					// 初回
+					// 360コントローラを名前で判定
+					if (p.JoyStickName.IndexOf("XBOX 360") >= 0)
+					{
+						p.isXbox = true;
+					}
 				}
+				else
+				{
+					p.isXbox = PlayerPrefs.GetInt(p.JoyStickName + "_isXbox") == 2;
+				}
+				
+
+				
 
 			}
 			catch (Exception ex)
