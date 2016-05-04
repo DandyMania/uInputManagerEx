@@ -45,6 +45,10 @@ public class PadManager : MonoBehaviour {
 	static private int AxisConfigStep = 0;		///
 	static private int AxisConfigIndex = 0;
 
+	static private bool IsButtonConfig = false;
+	static private int ButtonConfigStep = 0;
+	static private bool IsPushButtonAtConfig = false; // ボタン押した
+
 	static private int ActivePadIndex = 0; // アクティブなパッドNo
 
 	const int PadButtonMax = 16; // ボタンの最大数
@@ -135,26 +139,26 @@ public class PadManager : MonoBehaviour {
 	/// <returns></returns>
 	IEnumerator ButtonSettingFunc()
 	{
-
+		IsPushButtonAtConfig = false;
 
 		for (int iButton = 0; iButton < (int)Button.UP/*Button.Max*/; iButton++)
 		{
 			Debug.Log(Enum.GetName(typeof(Button), iButton) + "のボタン設定");
 
+			ButtonConfigStep = iButton;
 
 			while (true)
 			{
-				bool bPush = false;
 				for (int i = 0; i < PadButtonMax; i++)
 				{
 
 					if (GetRawButton(i, (Index)ActivePadIndex))
 					{
 						padData[ActivePadIndex].ConvTable[iButton] = i;
-						bPush = true;
+						IsPushButtonAtConfig = true;
 					}
 				}
-				if (bPush)
+				if (IsPushButtonAtConfig)
 				{
 					Debug.Log(Enum.GetName(typeof(Button), iButton) + "のボタン設定完了！");
 					break;
@@ -164,11 +168,12 @@ public class PadManager : MonoBehaviour {
 			}
 			
 			yield return new WaitForSeconds(1.0f);
+			IsPushButtonAtConfig = false;
 		}
 
 
 		Debug.Log("設定終わり");
-		IsPadConfig = false;
+		IsButtonConfig = false;
 
 		yield break;
 
@@ -577,7 +582,8 @@ public class PadManager : MonoBehaviour {
 		if (GUI.Button(new Rect(400, 20, 180, 24), "ボタンコンフィグ開始"))
 		{
 
-			IsPadConfig = true;
+			IsButtonConfig = true;
+			ButtonConfigStep = 0;
 			StartCoroutine("ButtonSettingFunc");
 
 		}
@@ -604,7 +610,20 @@ public class PadManager : MonoBehaviour {
 
 
 		}
-		else
+		else if (IsButtonConfig)
+		{
+
+			if (IsPushButtonAtConfig == false)
+			{
+				GUI.Label(new Rect(50, 50, 350, 20), Enum.GetName(typeof(Button), ButtonConfigStep) + "のボタン設定");
+
+			}
+			else
+			{
+				GUI.Label(new Rect(50, 50, 350, 20), Enum.GetName(typeof(Button), ButtonConfigStep) + "のボタン設定完了!");
+			}
+
+		}else
 		{
 
 
