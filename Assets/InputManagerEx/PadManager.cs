@@ -28,6 +28,10 @@ using System.Collections.Generic;
 using System;
 //using UnityEditor;
 
+
+
+using EditorGUIUtils;
+
 /// <summary>
 /// パッドマネージャー・パッドコンフィグ付き
 /// </summary>
@@ -51,6 +55,10 @@ public class PadManager : MonoBehaviour {
 	const float REPEAT_WAIT = 0.5f;
 	const float REPEAT_INTERVAL = 0.1f;
 
+
+	// デッドゾーンしきい値
+	const float DEAD_ZONE = 0.08f;
+
 	void Awake()
 	{
 		instance = this;
@@ -61,7 +69,9 @@ public class PadManager : MonoBehaviour {
 		LeftStick,	/// LStick
 		RightStick, /// RStick
 		POV,			/// POV
-		LRTrigger	/// 360コントローラのLT/RT
+		LRTrigger,	/// 360コントローラのLT/RT
+					/// 
+		MAX,
 	};
 
 	/// <summary>
@@ -106,15 +116,70 @@ public class PadManager : MonoBehaviour {
 		public bool[] Repeat = new bool[(int)Button.Max]; // キーリピート
 
 
-
+#if DEBUG
 		// スティック座標デバッグ表示
-		public Queue<Vector2> LStickPos = new Queue<Vector2>();
-		public Queue<Vector2> RStickPos = new Queue<Vector2>();
+		public class PosHistory{
+			public Queue<Vector2> pos = new Queue<Vector2>();
+			public Queue<Vector2> posRaw = new Queue<Vector2>();
+		};
+		public PosHistory[] posHistory = new PosHistory[(int)Axis.MAX];
+#endif
 	};
 
 	PadData[] padData = new PadData[(int)Index.Num];
 
+
+	/// <summary>
+	/// ボタンのコンフィグ
+	/// </summary>
+	/// <returns></returns>
+	IEnumerator ButtonSettingFunc()
+	{
+
+
+		for (int iButton = 0; iButton < (int)Button.UP/*Button.Max*/; iButton++)
+		{
+			Debug.Log(Enum.GetName(typeof(Button), iButton) + "のボタン設定");
+
+
+			while (true)
+			{
+				bool bPush = false;
+				for (int i = 0; i < PadButtonMax; i++)
+				{
+
+					if (GetRawButton(i, (Index)ActivePadIndex))
+					{
+						padData[ActivePadIndex].ConvTable[iButton] = i;
+						bPush = true;
+					}
+				}
+				if (bPush)
+				{
+					Debug.Log(Enum.GetName(typeof(Button), iButton) + "のボタン設定完了！");
+					break;
+				}
+
+				yield return new WaitForSeconds(0.1f);
+			}
+			
+			yield return new WaitForSeconds(1.0f);
+		}
+
+
+		Debug.Log("設定終わり");
+		IsPadConfig = false;
+
+		yield break;
+
+
+	}
+
 	
+	/// <summary>
+	/// パッドコンフィグ
+	/// </summary>
+	/// <returns></returns>
 	IEnumerator AxisSettingFunc()
 	{
 		int padIndex = 0;
@@ -146,7 +211,8 @@ public class PadManager : MonoBehaviour {
 			bool bDecide = false;
 			for (int i = 0; i < 6; i++)
 			{
-				if (Input.GetButton("Player" + padIndex + "_Btn" + i))
+				//if (Input.GetButton("Player" + padIndex + "_Btn" + i))
+				if (GetRawButton(i))
 				{
 					AxisConfigStep++;
 					AxisConfigIndex = 0;
@@ -299,7 +365,7 @@ public class PadManager : MonoBehaviour {
 			PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.PovY = "_1"; } else { pad.PovY = ""; }
 			// 見つかった
-			if (GetAxis(Axis.POV, (Index)padIndex).y >= 0.8f)
+			if (GetAxis(Axis.POV, (Index)padIndex).y <= -0.8f)
 			{
 
 				AxisConfigStep++;
@@ -430,8 +496,8 @@ public class PadManager : MonoBehaviour {
 		{// スティックキャリブレーション
 
 			PadData pad = instance.padData[(int)padIndex];
-			pad.LAxisOffset = GetAxis(Axis.LeftStick, (Index)ActivePadIndex);
-			pad.RAxisOffset = GetAxis(Axis.RightStick, (Index)ActivePadIndex);
+			pad.LAxisOffset = GetAxis(Axis.LeftStick, (Index)ActivePadIndex,true);
+			pad.RAxisOffset = GetAxis(Axis.RightStick, (Index)ActivePadIndex,true);
 
 		}
 
@@ -476,9 +542,13 @@ public class PadManager : MonoBehaviour {
 	}
 
 
-	
+	// ボタンデバッグ用
+	private delegate bool PadPressFunc(Button button, Index controlIndex);
 
 
+	/// <summary>
+	/// デバッグ
+	/// </summary>
 	void OnGUI()
 	{
 
@@ -492,7 +562,7 @@ public class PadManager : MonoBehaviour {
 		}
 
 
-		float size = 20.0f;
+		float size = 30.0f;
 
 		if (GUI.Button(new Rect(8, 20, 180, 24), "パッドコンフィグ開始"))
 		{
@@ -503,7 +573,18 @@ public class PadManager : MonoBehaviour {
 			StartCoroutine("AxisSettingFunc");
 
 		}
+		
+		if (GUI.Button(new Rect(400, 20, 180, 24), "ボタンコンフィグ開始"))
+		{
 
+			IsPadConfig = true;
+			StartCoroutine("ButtonSettingFunc");
+
+		}
+
+
+
+		
 
 
 		if (IsPadConfig)
@@ -512,9 +593,9 @@ public class PadManager : MonoBehaviour {
 			switch (AxisConfigStep)
 			{
 				case 0: GUI.Label(new Rect(50, 50, 350, 20), "使うパットのOKボタン押して！"); break;
-				case 1: GUI.Label(new Rect(50, 50, 300, 20), "右スティックY軸チェック 下に倒して！\n無い場合はOKボタン押して！"); break;
+				case 1: GUI.Label(new Rect(50, 50, 300, 20), "右スティックY軸チェック 上に倒して！\n無い場合はOKボタン押して！"); break;
 				case 2: GUI.Label(new Rect(50, 50, 300, 20), "右スティックX軸チェック 右に倒して！\n無い場合はOKボタン押して！"); break;
-				case 3: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) Y チェック 下押して！"); break;
+				case 3: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) Y チェック 上押して！"); break;
 				case 4: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) X チェック 右押して！"); break;
 				case 5: GUI.Label(new Rect(50, 50, 300, 20), "スティックに触らずにL2/R2どっちか押して！(Xbox360判定)"); break;
 
@@ -533,132 +614,184 @@ public class PadManager : MonoBehaviour {
 
 			GUI.Box(new Rect(10, startY - 50, 650, 450), "");
 
-			GUI.Label(new Rect(startX, startY - 50, 100, 20), "左");
-			GUI.Label(new Rect(startX + 50, startY - 50, 100, 20), "右");
-			GUI.Label(new Rect(startX + 100, startY - 50, 100, 20), "POV");
+			//GUI.Label(new Rect(startX, startY - 50, 100, 20), "左");
+			//GUI.Label(new Rect(startX + 50, startY - 50, 100, 20), "右");
+			//GUI.Label(new Rect(startX + 100, startY - 50, 100, 20), "POV");
 
 			for (int iPad = 0; iPad < (int)Index.Num; iPad++)
 			{
 
-				const int YOffset = 100;
+				PadData pad = padData[iPad];
+
+				if (pad.JoyStickName == null)
+				{
+					continue;
+				}
+
+				const int YOffset = 120;
 				if (ActivePadIndex == iPad)
 				{
-					GUI.Label(new Rect(startX - 90, startY + YOffset * iPad, 100, 20), "Active→");
+					GUI.Label(new Rect(startX - 90, startY + YOffset * iPad - 40, 100, 20), "Active↓");
 				}
 
 
-				GUI.Label(new Rect(startX - 90, startY + YOffset * iPad - 20, 100, 20), padData[iPad].JoyStickName);
+				GUI.Label(new Rect(startX - 90, startY + YOffset * iPad - 30, 100, 20), pad.JoyStickName);
 
 
+
+				//-------------------------------
 				// スティック
-				GUI.Label(new Rect(startX + GetAxis(Axis.LeftStick, (Index)iPad).x * size, startY + YOffset * iPad - GetAxis(Axis.LeftStick, (Index)iPad).y * size, 100, 20), "+");
-				GUI.Label(new Rect(startX, startY + YOffset * iPad, 100, 20), "+");
-
-				// スティック座標デバッグ
-				padData[iPad].LStickPos.Enqueue(GetAxis(Axis.LeftStick, (Index)iPad));
-				if (padData[iPad].LStickPos.Count > 128)
+				//-------------------------------
+				float centerX = startX-30;
+				float centerY = startY + YOffset * iPad + 20;
+				for (int iAxis = 0; iAxis <(int)Axis.MAX-1; iAxis++)
 				{
-					padData[iPad].LStickPos.Dequeue();
+
+					GUIHelper.DrawRect(new Rect(centerX - size, centerY - size, size * 2, size * 2), Color.white);
+					//GUIHelper.DrawCircle(new Vector2(centerX, centerY),size, Color.white);
+
+					GUIHelper.DrawRect(new Rect(centerX, centerY, 1, 1), Color.white);
+
+					GUIHelper.DrawRect(new Rect(centerX + GetAxis((Axis)iAxis, (Index)iPad).x * size,
+												centerY + GetAxis((Axis)iAxis, (Index)iPad).y * size, 1, 1), Color.yellow);
+
+
+					GUIHelper.DrawRect(new Rect(centerX + GetAxis((Axis)iAxis, (Index)iPad,true).x * size,
+							centerY + GetAxis((Axis)iAxis, (Index)iPad, true).y * size, 1, 1), Color.cyan);
+					
+					// スティック座標デバッグ
+					Vector2 laxis = GetAxis((Axis)iAxis, (Index)iPad) * size;
+					pad.posHistory[iAxis].pos.Enqueue(laxis);
+
+					Vector2 laxisraw = GetAxis((Axis)iAxis, (Index)iPad, true) * size;
+					pad.posHistory[iAxis].posRaw.Enqueue(laxisraw);
+
+
+					//if (laxis.x > 0.0f)
+					//{
+					//Debug.Log(laxis.x.ToString());
+					//Debug.Log(laxisraw.x.ToString());
+
+					//}
+
+
+
+					if (pad.posHistory[iAxis].pos.Count > 60)
+					{
+						pad.posHistory[iAxis].pos.Dequeue();
+
+						pad.posHistory[iAxis].posRaw.Dequeue();
+					}
+
+
+
+					{// 生データ
+						Vector2 center = new Vector2(centerX, centerY);
+						Vector2 prev = pad.posHistory[iAxis].posRaw.Peek();
+						foreach (Vector2 pos in pad.posHistory[iAxis].posRaw)
+						{
+
+							//GUI.Label(new Rect(startX + 50 + pos.x * size, startY + YOffset * iPad - pos.y * size, 100, 20), "+");
+
+							Vector2 start = new Vector2(prev.x, prev.y);
+							Vector2 end = new Vector2(pos.x, pos.y);
+							GUIHelper.DrawLine(center + start, center + end, Color.cyan);
+
+							prev = pos;
+						}
+					}
+
+					{ // 加工後データ
+						Vector2 center = new Vector2(centerX, centerY);
+						Vector2 prev = pad.posHistory[iAxis].pos.Peek();
+						foreach (Vector2 pos in pad.posHistory[iAxis].pos)
+						{
+
+							//GUI.Label(new Rect(startX + 50 + pos.x * size, startY + YOffset * iPad - pos.y * size, 100, 20), "+");
+
+							Vector2 start = new Vector2(prev.x, prev.y);
+							Vector2 end = new Vector2(pos.x, pos.y);
+							GUIHelper.DrawLine(center + start, center + end, Color.yellow);
+
+							prev = pos;
+						}
+					}
+
+					
+
+
+					
+
+					centerX += 70;
+
 				}
-				foreach (Vector2 pos in padData[iPad].LStickPos)
-				{
-					GUI.Label(new Rect(startX + pos.x * size, startY + YOffset * iPad - pos.y * size, 100, 20), "+");
-				}
 
 
-				GUI.Label(new Rect(startX + 50 + GetAxis(Axis.RightStick, (Index)iPad).x * size, startY + YOffset * iPad - GetAxis(Axis.RightStick, (Index)iPad).y * size, 100, 20), "+");
-				GUI.Label(new Rect(startX + 50, startY + YOffset * iPad, 100, 20), "+");
+
+				// アナログ値
+				GUI.Label(new Rect(startX - 20, startY + YOffset * iPad + 50, 100, 20), GetAxis(Axis.LeftStick, (Index)iPad).x.ToString("0.00"));
+				GUI.Label(new Rect(startX - 20, startY + YOffset * iPad + 60, 100, 20), GetAxis(Axis.LeftStick, (Index)iPad).y.ToString("0.00"));
+				GUI.Label(new Rect(startX - 20, startY + YOffset * iPad + 70, 100, 20), GetAxis(Axis.LeftStick, (Index)iPad, true).x.ToString("0.00"));
+				GUI.Label(new Rect(startX - 20, startY + YOffset * iPad + 80, 100, 20), GetAxis(Axis.LeftStick, (Index)iPad, true).y.ToString("0.00"));
 
 
-				// スティック座標デバッグ
-				padData[iPad].RStickPos.Enqueue(GetAxis(Axis.RightStick, (Index)iPad));
-				if (padData[iPad].RStickPos.Count > 128)
-				{
-					padData[iPad].RStickPos.Dequeue();
-				}
-				foreach (Vector2 pos in padData[iPad].RStickPos)
-				{
-					GUI.Label(new Rect(startX + 50 + pos.x * size, startY + YOffset * iPad - pos.y * size, 100, 20), "+");
-				}
+				GUI.Label(new Rect(startX + 30, startY + YOffset * iPad + 50, 100, 20), GetAxis(Axis.RightStick, (Index)iPad).x.ToString("0.00"));
+				GUI.Label(new Rect(startX + 30, startY + YOffset * iPad + 60, 100, 20), GetAxis(Axis.RightStick, (Index)iPad).y.ToString("0.00"));
+				GUI.Label(new Rect(startX + 30, startY + YOffset * iPad + 70, 100, 20), GetAxis(Axis.RightStick, (Index)iPad, true).x.ToString("0.00"));
+				GUI.Label(new Rect(startX + 30, startY + YOffset * iPad + 80, 100, 20), GetAxis(Axis.RightStick, (Index)iPad, true).y.ToString("0.00"));
 
 
-				GUI.Label(new Rect(startX + 100 + GetAxis(Axis.POV, (Index)iPad).x * size, startY + YOffset * iPad + GetAxis(Axis.POV, (Index)iPad).y * size, 100, 20), "+");
-				GUI.Label(new Rect(startX + 100, startY + YOffset * iPad, 100, 20), "+");
 
+				float BtnX = startX + 150;
+				float BtnY = startY + YOffset * iPad - 20;
+
+
+			
 				// ボタンRaw
 				for (int button = 0; button < PadButtonMax; button++)
 				{
+
+					Rect r = new Rect(BtnX + 20 * button, BtnY, 5, 5);
 					if (GetRawButton(button, (Index)iPad))
 					{
-
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad - 20, 100, 20), "O");
+						GUIHelper.DrawRect(r, Color.yellow, 3);
 					}
 					else
 					{
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad - 20, 100, 20), "X");
+						GUIHelper.DrawRect(r, Color.white);
 					}
 				}
 
 				// LT/RT
-				GUI.Label(new Rect(startX + 150 + 20 * 16, startY + YOffset * iPad - 20, 100, 20), GetAxis(Axis.LRTrigger, (Index)iPad).y.ToString("0.00"));
+				//GUI.Label(new Rect(startX + 150 + 20 * 16, startY + YOffset * iPad - 20, 100, 20), GetAxis(Axis.LRTrigger, (Index)iPad).y.ToString("0.00"));
 
 
-				// トリガー
-				for (int button = 0; button < (int)Button.Max; button++)
+
+				// 加工後のボタン押下情報
+				PadPressFunc[] funcArray = new PadPressFunc[] { GetTrigger, GetPress, GetRepeat, GetRelease };
+				foreach (PadPressFunc func in funcArray)
 				{
-					if (GetTrigger((Button)button, (Index)iPad))
+					BtnY += 15;
+					for (int button = 0; button < (int)Button.Max; button++)
 					{
 
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad, 100, 20), "O");
+						Rect r = new Rect(BtnX + 20 * button, BtnY, 5, 5);
+
+						if (func((Button)button, (Index)iPad))
+						{
+							GUIHelper.DrawRect(r, Color.yellow, 3);
+						}
+						else
+						{
+							GUIHelper.DrawRect(r, Color.white);
+						}
 					}
-					else
-					{
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad, 100, 20), "X");
-					}
+
+					
+
 				}
 
-
-				// Press
-				for (int button = 0; button < (int)Button.Max; button++)
-				{
-					if (GetPress((Button)button, (Index)iPad))
-					{
-
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 15, 100, 20), "O");
-					}
-					else
-					{
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 15, 100, 20), "X");
-					}
-				}
-
-				// リピート
-				for (int button = 0; button < (int)Button.Max; button++)
-				{
-					if (GetRepeat((Button)button, (Index)iPad))
-					{
-
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 30, 100, 20), "O");
-					}
-					else
-					{
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 30, 100, 20), "X");
-					}
-				}
-
-				// リリース
-				for (int button = 0; button < (int)Button.Max; button++)
-				{
-					if (GetRelease((Button)button, (Index)iPad))
-					{
-
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 45, 100, 20), "O");
-					}
-					else
-					{
-						GUI.Label(new Rect(startX + 150 + 20 * button, startY + YOffset * iPad + 45, 100, 20), "X");
-					}
-				}
+				
 
 			}
 
@@ -698,16 +831,17 @@ public class PadManager : MonoBehaviour {
 			{
 
 				
-				pad.Prev[pad.ConvTable[(int)button]] = pad.Now[pad.ConvTable[(int)button]];
+				pad.Prev[button] = pad.Now[button];
 
 				// ボタンチェック
-				if (GetRawButton(button, (Index)iPad))
+				int convButton = pad.ConvTable[button];
+				if (GetRawButton(convButton, (Index)iPad))
 				{
-					pad.Now[pad.ConvTable[(int)button]] = true;
+					pad.Now[button] = true;
 				}
 				else
 				{
-					pad.Now[pad.ConvTable[(int)button]] = false;
+					pad.Now[button] = false;
 				}
 
 				//---------------------------
@@ -718,6 +852,61 @@ public class PadManager : MonoBehaviour {
 					UpdateX360(ref pad, (Index)iPad, (Button)button);
 
 				}
+
+
+				// 左スティックを方向キーとして使う
+				// L2/R2がアナログなので。。。
+				switch ((Button)button)
+				{
+					case Button.UP:
+						if (GetAxis(Axis.LeftStick, (Index)iPad).y <= -0.8f ||
+							 GetAxis(Axis.POV, (Index)iPad).y <= -0.8f)
+						{
+							pad.Now[(int)Button.UP] = true;
+						}else{
+							pad.Now[(int)Button.UP] = false;
+						}
+						break;
+					case Button.DOWN:
+						if (GetAxis(Axis.LeftStick, (Index)iPad).y >= 0.8f ||
+							GetAxis(Axis.POV, (Index)iPad).y >= 0.8f)
+						{
+							pad.Now[(int)Button.DOWN] = true;
+						}
+						else
+						{
+							pad.Now[(int)Button.DOWN] = false;
+						}
+						break;
+					case Button.LEFT:
+						if (GetAxis(Axis.LeftStick, (Index)iPad).x <= -0.8f ||
+							GetAxis(Axis.POV, (Index)iPad).x <= -0.8f)
+						{
+							pad.Now[(int)Button.LEFT] = true;
+
+						}
+						else
+						{
+							pad.Now[(int)Button.LEFT] = false;
+						}
+						break;
+					case Button.RIGHT:
+
+						if (GetAxis(Axis.LeftStick, (Index)iPad).x >= 0.8f ||
+							GetAxis(Axis.POV, (Index)iPad).x >= 0.8f)
+						{
+							pad.Now[(int)Button.RIGHT] = true;
+
+						}
+						else
+						{
+							pad.Now[(int)Button.RIGHT] = false;
+						}
+						break;
+				}
+
+
+
 
 				//---------------------------
 				// キーリピート処理
@@ -762,7 +951,7 @@ public class PadManager : MonoBehaviour {
 		{
 			case Button.LT:
 				{
-					if (GetAxis(Axis.LRTrigger, (Index)iPad).y < -0.5f)
+					if (GetAxis(Axis.LRTrigger, (Index)iPad).y > 0.5f)
 					{
 
 						pad.Now[(int)Button.LT] = true;
@@ -776,7 +965,7 @@ public class PadManager : MonoBehaviour {
 				break;
 			case Button.RT:
 				{
-					if (GetAxis(Axis.LRTrigger, (Index)iPad).y > 0.5f)
+					if (GetAxis(Axis.LRTrigger, (Index)iPad).y < -0.5f)
 					{
 
 						pad.Now[(int)Button.RT] = true;
@@ -787,66 +976,6 @@ public class PadManager : MonoBehaviour {
 					}
 				}
 				break;
-			case Button.UP:
-				{
-
-					if (GetAxis(Axis.POV, (Index)iPad).y <= -0.8f)
-					{
-						pad.Now[(int)Button.UP] = true;
-
-					}
-					else
-					{
-						pad.Now[(int)Button.UP] = false;
-					}
-				}
-				break;
-			case Button.DOWN:
-				{
-					{
-
-						if (GetAxis(Axis.POV, (Index)iPad).y >= 0.8f)
-						{
-							pad.Now[(int)Button.DOWN] = true;
-
-						}
-						else
-						{
-							pad.Now[(int)Button.DOWN] = false;
-						}
-					}
-				}
-				break;
-			case Button.LEFT:
-				{
-
-					if (GetAxis(Axis.POV, (Index)iPad).x <= -0.8f)
-					{
-						pad.Now[(int)Button.LEFT] = true;
-
-					}
-					else
-					{
-						pad.Now[(int)Button.LEFT] = false;
-					}
-				}
-				break;
-			case Button.RIGHT:
-				{
-					{
-
-						if (GetAxis(Axis.POV, (Index)iPad).x >= 0.8f)
-						{
-							pad.Now[(int)Button.RIGHT] = true;
-
-						}
-						else
-						{
-							pad.Now[(int)Button.RIGHT] = false;
-						}
-					}
-					break;
-				}
 		}
 	}
 
@@ -907,8 +1036,14 @@ public class PadManager : MonoBehaviour {
 			if (raw == false)
 			{
 				axisXY.x = Input.GetAxis(xName);
-				axisXY.y = -Input.GetAxis(yName);
-
+				if (axis == Axis.POV)
+				{
+					axisXY.y = -Input.GetAxis(yName);
+				}
+				else
+				{
+					axisXY.y = Input.GetAxis(yName);
+				}
 				// todo:ズレ補正
 				/*
 				if (axis == Axis.LeftStick)
@@ -921,28 +1056,75 @@ public class PadManager : MonoBehaviour {
 				}
 				*/
 
+				// デッド・ゾーン
+				/*
+				if (axis == Axis.LeftStick)
+				{
+					if (Mathf.Abs(axisXY.x) < Mathf.Abs(pad.LAxisOffset.x) + DEAD_ZONE)
+					{
+						axisXY.x = 0;
+					}
+					if (Mathf.Abs(axisXY.y) < Mathf.Abs(pad.LAxisOffset.y) + DEAD_ZONE)
+					{
+						axisXY.y = 0;
+					}
+				}
+				if (axis == Axis.RightStick)
+				{
+					if (Mathf.Abs(axisXY.x) < Mathf.Abs(pad.RAxisOffset.x) + DEAD_ZONE)
+					{
+						axisXY.x = 0;
+					}
+					if (Mathf.Abs(axisXY.y) < Mathf.Abs(pad.RAxisOffset.y) + DEAD_ZONE)
+					{
+						axisXY.y = 0;
+					}
+				}
+				*/
+
 				if (axis == Axis.LeftStick || axis == Axis.RightStick)
 				{
+					// 360パッドはY軸のUP方向の移動量が少ないので補正
+					if (pad.isXbox)
+					{
+						if (axisXY.y < 0.0f)
+						{
+							axisXY.y *= 1.3f;
+						}
+					}
+
+	
 					// 極座標変換 + デッドゾーン処理(非線形)
+					//http://www.kawaz.org/blogs/isekaf/2013/12/23/564/
 					float angle = Mathf.Atan2(axisXY.y, axisXY.x);
-					float len = Mathf.Sqrt(Mathf.Pow(axisXY.x, 2) + Mathf.Pow(axisXY.y, 2));
+					float power = Mathf.Sqrt(Mathf.Pow(axisXY.x, 2) + Mathf.Pow(axisXY.y, 2));
 
+					//power = power * power;
+					
+					
 
-					// 変化量を非線形にしてデッド・ゾーン対応
-					len = Mathf.Sqrt(Mathf.Pow(len, 2));
+					axisXY = new Vector2(power * Mathf.Cos(angle), power * Mathf.Sin(angle));
 
-					axisXY = new Vector2(len * Mathf.Cos(angle), len * Mathf.Sin(angle));
-
-					if (len > 1.0f)
+					if (power > 1.0f)
 					{
 						axisXY /= axisXY.magnitude;
 					}
+
+					
 				}
 			}
 			else
 			{
 				axisXY.x = Input.GetAxisRaw(xName);
-				axisXY.y = -Input.GetAxisRaw(yName);
+
+				if (axis == Axis.POV)
+				{
+					axisXY.y = -Input.GetAxisRaw(yName);
+				}
+				else
+				{
+					axisXY.y = Input.GetAxisRaw(yName);
+				}
 			}
 		}
 		catch (System.Exception e)
@@ -1083,6 +1265,22 @@ public class PadManager : MonoBehaviour {
 
 
 
+	/// <summary>
+	/// 番号指定でボタンの状態取得(Update以外では取得不可)
+	/// </summary>
+	/// <param name="button"></param>
+	/// <param name="controlIndex"></param>
+	/// <returns></returns>
+	public static bool GetRawButtonTrigger(int button, Index controlIndex = Index.Active)
+	{
+
+		if (controlIndex == Index.Active)
+		{
+			controlIndex = (Index)ActivePadIndex;
+		}
+
+		return Input.GetButtonDown("Player" + (int)controlIndex + "_Btn" + button);
+	}
 
 	public static bool GetRawButton(int button, Index controlIndex = Index.Active)
 	{
@@ -1115,11 +1313,19 @@ public class PadManager : MonoBehaviour {
 		// 設定取得
 		ActivePadIndex = PlayerPrefs.GetInt("ActivePad");
 
+
+		string[] JoyName = Input.GetJoystickNames();
+
 		for (int iPad = 0; iPad <(int)Index.Num; iPad++)
 		{
 			
 			padData[iPad] = new PadData();
 			PadData p = padData[iPad];
+
+			for (int i = 0; i < (int)Axis.MAX-1; i++)
+			{
+				p.posHistory[i] = new PadData.PosHistory();
+			}
 
 
 			// とりあえず連番で初期化
@@ -1130,9 +1336,14 @@ public class PadManager : MonoBehaviour {
 			
 			}
 
-			try
+			//try
 			{
-				p.JoyStickName = Input.GetJoystickNames()[iPad];
+
+				if (iPad > JoyName.Length-1)
+				{
+					continue;
+				}
+				p.JoyStickName = JoyName[iPad];
 
 
 
@@ -1165,9 +1376,9 @@ public class PadManager : MonoBehaviour {
 				
 
 			}
-			catch (Exception ex)
+			//catch (Exception ex)
 			{
-				Debug.Log(ex.Message);
+			//	Debug.Log(ex.Message);
 			}
 		}
 	}
