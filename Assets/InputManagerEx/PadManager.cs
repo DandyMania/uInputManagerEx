@@ -120,14 +120,14 @@ public class PadManager : MonoBehaviour {
 		public bool[] Repeat = new bool[(int)Button.Max]; // キーリピート
 
 
-#if DEBUG
+//#if DEBUG
 		// スティック座標デバッグ表示
 		public class PosHistory{
 			public Queue<Vector2> pos = new Queue<Vector2>();
 			public Queue<Vector2> posRaw = new Queue<Vector2>();
 		};
 		public PosHistory[] posHistory = new PosHistory[(int)Axis.MAX];
-#endif
+//#endif
 	};
 
 	PadData[] padData = new PadData[(int)Index.Num];
@@ -631,7 +631,7 @@ public class PadManager : MonoBehaviour {
 			float startY = 100;
 			float startX = 100;
 
-			GUI.Box(new Rect(10, startY - 50, 650, 450), "");
+			GUI.Box(new Rect(10, startY - 50, 650, 520), "");
 
 			//GUI.Label(new Rect(startX, startY - 50, 100, 20), "左");
 			//GUI.Label(new Rect(startX + 50, startY - 50, 100, 20), "右");
@@ -647,7 +647,7 @@ public class PadManager : MonoBehaviour {
 					continue;
 				}
 
-				const int YOffset = 120;
+				const int YOffset = 100;
 				if (ActivePadIndex == iPad)
 				{
 					GUI.Label(new Rect(startX - 90, startY + YOffset * iPad - 40, 100, 20), "Active↓");
