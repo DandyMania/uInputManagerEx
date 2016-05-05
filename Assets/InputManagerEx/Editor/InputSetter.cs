@@ -63,7 +63,12 @@ public class InputSetter
 		EditorApplication.ExecuteMenuItem("Edit/Project Settings/Input");  
 	}
 
-
+	[MenuItem("Tools/PlayerPrefs DeleteAll")]
+	static void DeleteAll()
+	{
+		PlayerPrefs.DeleteAll();
+		Debug.Log("Delete All Data Of PlayerPrefs!!");
+	}
 
 	/// <summary>
 	/// グローバルな入力設定を追加する（OK、キャンセルなど）
