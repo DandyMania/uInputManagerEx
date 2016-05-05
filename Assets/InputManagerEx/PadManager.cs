@@ -664,7 +664,7 @@ public class PadManager : MonoBehaviour {
 				}
 
 
-				GUI.Label(new Rect(startX - 90, startY + YOffset * iPad - 30, 100, 20), pad.JoyStickName);
+				GUI.Label(new Rect(startX - 90, startY + YOffset * iPad - 30, 300, 20), pad.JoyStickName);
 
 
 
@@ -705,7 +705,7 @@ public class PadManager : MonoBehaviour {
 
 
 
-					if (pad.posHistory[iAxis].pos.Count > 60)
+					if (pad.posHistory[iAxis].pos.Count > 120)
 					{
 						pad.posHistory[iAxis].pos.Dequeue();
 
@@ -1114,9 +1114,9 @@ public class PadManager : MonoBehaviour {
 				if (axis == Axis.LeftStick || axis == Axis.RightStick)
 				{
 					// 360パッド等はY軸のUP方向の移動量が少なくて綺麗な円にならないので補正
-					if (pad.isXbox)
+					//if (pad.isXbox)
 					{
-						axisXY.y *= 2.0f;
+						axisXY.y *= 1.2f;
 					}
 
 	
