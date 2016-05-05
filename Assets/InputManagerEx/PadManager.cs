@@ -141,6 +141,8 @@ public class PadManager : MonoBehaviour {
 	{
 		IsPushButtonAtConfig = false;
 
+		PadData pad = instance.padData[ActivePadIndex];
+
 		for (int iButton = 0; iButton < (int)Button.UP/*Button.Max*/; iButton++)
 		{
 			Debug.Log(Enum.GetName(typeof(Button), iButton) + "のボタン設定");
@@ -154,7 +156,7 @@ public class PadManager : MonoBehaviour {
 
 					if (GetRawButton(i, (Index)ActivePadIndex))
 					{
-						padData[ActivePadIndex].ConvTable[iButton] = i;
+						pad.ConvTable[iButton] = i;
 						IsPushButtonAtConfig = true;
 					}
 				}
@@ -169,6 +171,12 @@ public class PadManager : MonoBehaviour {
 			
 			yield return new WaitForSeconds(1.0f);
 			IsPushButtonAtConfig = false;
+		}
+
+		// 変換テーブル
+		for (int i = 0; i < (int)Button.Max; i++)
+		{
+			PlayerPrefs.SetInt(pad.JoyStickName + "_" + Enum.GetName(typeof(Button), i), pad.ConvTable[i]);
 		}
 
 
@@ -603,7 +611,7 @@ public class PadManager : MonoBehaviour {
 				case 2: GUI.Label(new Rect(50, 50, 300, 20), "右スティックX軸チェック 右に倒して！\n無い場合はOKボタン押して！"); break;
 				case 3: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) Y チェック 上押して！"); break;
 				case 4: GUI.Label(new Rect(50, 50, 300, 20), "十字キー(POV) X チェック 右押して！"); break;
-				case 5: GUI.Label(new Rect(50, 50, 300, 20), "スティックに触らずにL2/R2どっちか押して！(Xbox360判定)"); break;
+				case 5: GUI.Label(new Rect(50, 50, 300, 20), "スティックに触らずにL2/R2どっちか押して！\n(Xbox360判定)"); break;
 
 			}
 
@@ -1351,8 +1359,6 @@ public class PadManager : MonoBehaviour {
 			for (int ibtn = 0; ibtn <(int) Button.Max; ibtn++)
 			{
 				p.ConvTable[ibtn] = ibtn;
-
-			
 			}
 
 			//try
@@ -1375,6 +1381,17 @@ public class PadManager : MonoBehaviour {
 				p.RAxisOffset.y = PlayerPrefs.GetFloat(p.JoyStickName + "_RightAxisY_off");
 				p.LAxisOffset.x = PlayerPrefs.GetFloat(p.JoyStickName + "_LeftAxisX_off");
 				p.LAxisOffset.y = PlayerPrefs.GetFloat(p.JoyStickName + "_LeftAxisY_off");
+
+				// 変換テーブル
+				if (PlayerPrefs.HasKey(p.JoyStickName + "_" + Enum.GetName(typeof(Button), 0)))
+				{
+					Debug.Log("パッド変換テーブル見っけ");
+
+					for (int i = 0; i < (int)Button.Max; i++)
+					{
+						p.ConvTable[i] = PlayerPrefs.GetInt(p.JoyStickName + "_" + Enum.GetName(typeof(Button), i));
+					}
+				}
 
 
 				if (PlayerPrefs.GetInt(p.JoyStickName + "_isXbox") == 0)
