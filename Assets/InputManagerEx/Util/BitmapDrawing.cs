@@ -244,12 +244,12 @@ namespace EditorGUIUtils
 			private class Flat2DArray
 			{
 				public Color[] data;
-				private readonly int height;
+				//private readonly int height;
 				private readonly int width;
 
 				public Flat2DArray(int height, int width, Color[] data)
 				{
-					this.height = height;
+					//this.height = height;
 					this.width = width;
 
 					this.data = data;
