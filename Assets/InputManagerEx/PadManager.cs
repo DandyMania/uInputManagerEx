@@ -41,6 +41,8 @@ public class PadManager : MonoBehaviour {
 	static private PadManager instance;
 	static public PadManager GetInstance() { return instance; }
 
+
+	// パッドコンフィグ関連
 	static private bool IsPadConfig = false; /// パッドコンフィグ開始
 	static private int AxisConfigStep = 0;		///
 	static private int AxisConfigIndex = 0;
@@ -50,6 +52,12 @@ public class PadManager : MonoBehaviour {
 	static private bool IsPushButtonAtConfig = false; // ボタン押した
 
 	static private int ActivePadIndex = 0; // アクティブなパッドNo
+
+	//--------------------------
+
+
+
+
 
 	const int PadButtonMax = 16; // ボタンの最大数
 
@@ -89,7 +97,7 @@ public class PadManager : MonoBehaviour {
 	/// <summary>
 	///  ボタン定義
 	/// </summary>
-	public enum Button { A, B, X, Y, LB, RB, Back, Start, LS, RS, LT, RT, UP, RIGHT, DOWN,LEFT, Max }
+	public enum Button { A, B, X, Y, LB, RB, Back, Start, LS, RS, LT, RT, UP, RIGHT, DOWN,LEFT, MAX }
 
 	/// <summary>
 	/// パッドデータ
@@ -111,13 +119,13 @@ public class PadManager : MonoBehaviour {
 		public Vector2 LAxisOffset;
 		public Vector2 RAxisOffset; 
 
-		public int[] ConvTable = new int[(int)Button.Max]; // 変換テーブル
+		public int[] ConvTable = new int[(int)Button.MAX]; // 変換テーブル
 
-		public bool[] Prev = new bool[(int)Button.Max]; // 前のフレームの押下情報
-		public bool[] Now = new bool[(int)Button.Max]; // 現のフレームの押下情報
+		public bool[] Prev = new bool[(int)Button.MAX]; // 前のフレームの押下情報
+		public bool[] Now = new bool[(int)Button.MAX]; // 現のフレームの押下情報
 
-		public float[] RepeatWait = new float[(int)Button.Max];
-		public bool[] Repeat = new bool[(int)Button.Max]; // キーリピート
+		public float[] RepeatWait = new float[(int)Button.MAX];
+		public bool[] Repeat = new bool[(int)Button.MAX]; // キーリピート
 
 
 //#if DEBUG
@@ -159,6 +167,7 @@ public class PadManager : MonoBehaviour {
 						pad.ConvTable[iButton] = i;
 						IsPushButtonAtConfig = true;
 					}
+
 				}
 				if (IsPushButtonAtConfig)
 				{
@@ -174,7 +183,7 @@ public class PadManager : MonoBehaviour {
 		}
 
 		// 変換テーブル
-		for (int i = 0; i < (int)Button.Max; i++)
+		for (int i = 0; i < (int)Button.MAX; i++)
 		{
 			PlayerPrefs.SetInt(pad.JoyStickName + "_" + Enum.GetName(typeof(Button), i), pad.ConvTable[i]);
 		}
@@ -291,13 +300,14 @@ public class PadManager : MonoBehaviour {
 			else
 			{
 
-				if (GetTrigger(Button.A))
+				if (GetPress(Button.A))
 				{
 					// 右スティックなし
 					AxisConfigStep++;
 					pad.RightAxisY = "_none";
 
 					Debug.Log("右スティック無し");
+					break;
 				}
 				else
 				{
@@ -350,13 +360,14 @@ public class PadManager : MonoBehaviour {
 			else
 			{
 
-				if (GetTrigger(Button.A))
+				if (GetPress(Button.A))
 				{
 					// 右スティックなし
 					AxisConfigStep++;
-					pad.RightAxisY = "_none";
+					pad.RightAxisX = "_none";
 
 					Debug.Log("右スティック無し");
+					break;
 				}
 				else
 				{
@@ -801,7 +812,7 @@ public class PadManager : MonoBehaviour {
 				foreach (PadPressFunc func in funcArray)
 				{
 					BtnY += 15;
-					for (int button = 0; button < (int)Button.Max; button++)
+					for (int button = 0; button < (int)Button.MAX; button++)
 					{
 
 						Rect r = new Rect(BtnX + 20 * button, BtnY, 5, 5);
@@ -856,7 +867,7 @@ public class PadManager : MonoBehaviour {
 
 			PadData pad = padData[(int)iPad];
 
-			for (int button = 0; button < (int)Button.Max; button++)
+			for (int button = 0; button < (int)Button.MAX; button++)
 			{
 
 				
@@ -1127,11 +1138,16 @@ public class PadManager : MonoBehaviour {
 					float power = Mathf.Sqrt(Mathf.Pow(axisXY.x, 2) + Mathf.Pow(axisXY.y, 2));
 
 					//power = power * power;
-					
-					
+					// デッドゾーン
+					if (power < 0.15f)
+					{
+						power = 0.0f;
+					}
 
 					axisXY = new Vector2(power * Mathf.Cos(angle), power * Mathf.Sin(angle));
 
+
+					
 					if (power > 1.0f)
 					{
 						axisXY /= axisXY.magnitude;
@@ -1356,7 +1372,7 @@ public class PadManager : MonoBehaviour {
 
 
 			// とりあえず連番で初期化
-			for (int ibtn = 0; ibtn <(int) Button.Max; ibtn++)
+			for (int ibtn = 0; ibtn <(int) Button.MAX; ibtn++)
 			{
 				p.ConvTable[ibtn] = ibtn;
 			}
@@ -1387,7 +1403,7 @@ public class PadManager : MonoBehaviour {
 				{
 					Debug.Log("パッド変換テーブル見っけ");
 
-					for (int i = 0; i < (int)Button.Max; i++)
+					for (int i = 0; i < (int)Button.MAX; i++)
 					{
 						p.ConvTable[i] = PlayerPrefs.GetInt(p.JoyStickName + "_" + Enum.GetName(typeof(Button), i));
 					}
