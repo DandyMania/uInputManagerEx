@@ -1111,13 +1111,10 @@ public class PadManager : MonoBehaviour {
 
 				if (axis == Axis.LeftStick || axis == Axis.RightStick)
 				{
-					// 360パッドはY軸のUP方向の移動量が少ないので補正
+					// 360パッド等はY軸のUP方向の移動量が少なくて綺麗な円にならないので補正
 					if (pad.isXbox)
 					{
-						if (axisXY.y < 0.0f)
-						{
-							axisXY.y *= 1.3f;
-						}
+						axisXY.y *= 2.0f;
 					}
 
 	
