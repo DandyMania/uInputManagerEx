@@ -885,11 +885,12 @@ public class PadManager : MonoBehaviour {
 
 				// 左スティックを方向キーとして使う
 				// L2/R2がアナログなので。。。
+				const float StickSlide = 0.5f;
 				switch ((Button)button)
 				{
 					case Button.UP:
-						if (GetAxis(Axis.LeftStick, (Index)iPad).y <= -0.8f ||
-							 GetAxis(Axis.POV, (Index)iPad).y <= -0.8f)
+						if (GetAxis(Axis.LeftStick, (Index)iPad).y <= -StickSlide ||
+							 GetAxis(Axis.POV, (Index)iPad).y <= -StickSlide)
 						{
 							pad.Now[(int)Button.UP] = true;
 						}else{
@@ -897,8 +898,8 @@ public class PadManager : MonoBehaviour {
 						}
 						break;
 					case Button.DOWN:
-						if (GetAxis(Axis.LeftStick, (Index)iPad).y >= 0.8f ||
-							GetAxis(Axis.POV, (Index)iPad).y >= 0.8f)
+						if (GetAxis(Axis.LeftStick, (Index)iPad).y >= StickSlide ||
+							GetAxis(Axis.POV, (Index)iPad).y >= StickSlide)
 						{
 							pad.Now[(int)Button.DOWN] = true;
 						}
@@ -908,8 +909,8 @@ public class PadManager : MonoBehaviour {
 						}
 						break;
 					case Button.LEFT:
-						if (GetAxis(Axis.LeftStick, (Index)iPad).x <= -0.8f ||
-							GetAxis(Axis.POV, (Index)iPad).x <= -0.8f)
+						if (GetAxis(Axis.LeftStick, (Index)iPad).x <= -StickSlide ||
+							GetAxis(Axis.POV, (Index)iPad).x <= -StickSlide)
 						{
 							pad.Now[(int)Button.LEFT] = true;
 
@@ -921,8 +922,8 @@ public class PadManager : MonoBehaviour {
 						break;
 					case Button.RIGHT:
 
-						if (GetAxis(Axis.LeftStick, (Index)iPad).x >= 0.8f ||
-							GetAxis(Axis.POV, (Index)iPad).x >= 0.8f)
+						if (GetAxis(Axis.LeftStick, (Index)iPad).x >= StickSlide ||
+							GetAxis(Axis.POV, (Index)iPad).x >= StickSlide)
 						{
 							pad.Now[(int)Button.RIGHT] = true;
 
