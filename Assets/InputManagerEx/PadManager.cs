@@ -202,16 +202,18 @@ public class PadManager : MonoBehaviour {
 		//ActivePadIndex = 0;
 
 		// パッド名初期化
+
+		string[] JoyName = Input.GetJoystickNames();
 		for (int iPad = 0; iPad < (int)Index.Num; iPad++)
 		{
-			try
-			{
-				padData[iPad].JoyStickName = Input.GetJoystickNames()[iPad];
+			//try
+			if (iPad < JoyName.Length-1){
+				padData[iPad].JoyStickName = JoyName[iPad];
 			}
-			catch (Exception ex)
-			{
-				Debug.Log(ex.Message);
-			}
+			//catch (Exception ex)
+			//{
+			//	Debug.Log(ex.Message);
+			//}
 		}
 
 		//-----------------------------
@@ -225,7 +227,7 @@ public class PadManager : MonoBehaviour {
 			for (int i = 0; i < 6; i++)
 			{
 				//if (Input.GetButton("Player" + padIndex + "_Btn" + i))
-				if (GetRawButton(i))
+				if (GetRawButton(i, (Index)padIndex))
 				{
 					AxisConfigStep++;
 					AxisConfigIndex = 0;
@@ -278,7 +280,7 @@ public class PadManager : MonoBehaviour {
 			PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.RightAxisY = "_1"; } else { pad.RightAxisY = ""; }
 			// 見つかった
-			if (GetAxis(Axis.RightStick, (Index)padIndex).y <= -0.8f)
+			if (GetAxis(Axis.RightStick, (Index)padIndex,true).y <= -0.8f)
 			{
 				Debug.Log("右スティックY軸めっけ");
 
@@ -336,7 +338,7 @@ public class PadManager : MonoBehaviour {
 			PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.RightAxisX = "_1"; } else { pad.RightAxisX = ""; }
 			// 見つかった
-			if (GetAxis(Axis.RightStick, (Index)padIndex).x >= 0.8f)
+			if (GetAxis(Axis.RightStick, (Index)padIndex, true).x >= 0.8f)
 			{
 
 				AxisConfigStep++;
@@ -378,12 +380,12 @@ public class PadManager : MonoBehaviour {
 			PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.PovY = "_1"; } else { pad.PovY = ""; }
 			// 見つかった
-			if (GetAxis(Axis.POV, (Index)padIndex).y <= -0.8f)
+			if (GetAxis(Axis.POV, (Index)padIndex, true).y <= -0.8f)
 			{
 
 				AxisConfigStep++;
 				AxisConfigIndex = 0;
-				Debug.Log("POV Y軸めっけ" + GetAxis(Axis.POV, (Index)padIndex).y.ToString());
+				Debug.Log("POV Y軸めっけ" + GetAxis(Axis.POV, (Index)padIndex, true).y.ToString());
 				break;
 
 			}
@@ -421,7 +423,7 @@ public class PadManager : MonoBehaviour {
 			PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.PovX = "_1"; } else { pad.PovX = ""; }
 			// 見つかった
-			if (GetAxis(Axis.POV, (Index)padIndex).x >= 0.8f)
+			if (GetAxis(Axis.POV, (Index)padIndex, true).x >= 0.8f)
 			{
 
 				AxisConfigStep++;
@@ -454,7 +456,7 @@ public class PadManager : MonoBehaviour {
 
 			// 360かも
 			PadData pad = instance.padData[(int)padIndex];
-			if (Mathf.Abs(GetAxis(Axis.LRTrigger, (Index)padIndex).x) >= 0.8f)
+			if (Mathf.Abs(GetAxis(Axis.LRTrigger, (Index)padIndex, true).x) >= 0.8f)
 			{
 
 				AxisConfigStep++;
