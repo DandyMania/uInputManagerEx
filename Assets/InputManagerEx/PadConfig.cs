@@ -1,4 +1,28 @@
-﻿using UnityEngine;
+﻿/*
+ * Copyright (c) 2016 DandyMania
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * Latest version: https://github.com/DandyMania/uInputManagerEx/
+*/
+
+using UnityEngine;
 using System.Collections;
 using System;
 
@@ -115,7 +139,7 @@ public class PadConfig : MonoBehaviour {
 
 
 
-		PadManager.PadData pad = PadManager.GetPadData((PadManager.Index)padIndex);
+		
 
 		//-----------------------------
 		// アクティブなパッドチェック
@@ -133,24 +157,24 @@ public class PadConfig : MonoBehaviour {
 					AxisConfigStep++;
 					AxisConfigIndex = 0;
 
-					//PadData pad = instance.padData[(int)padIndex];
+					PadManager.PadData p = PadManager.GetPadData((PadManager.Index)padIndex);
 
-					Debug.Log("アクティブなパッド決定" + padIndex + " " + pad.JoyStickName);
+					Debug.Log("アクティブなパッド決定" + padIndex + " " + p.JoyStickName);
 					PadManager.GetInstance().ActivePadIndex = padIndex;
 
 					bDecide = true;
 
 					// OKボタンをゼロ番に割当
 
-					pad.ConvTable[i] = (int)PadManager.Button.A;
-					pad.ConvTable[(int)PadManager.Button.A] = i;
+					p.ConvTable[i] = (int)PadManager.Button.A;
+					p.ConvTable[(int)PadManager.Button.A] = i;
 
 
 					// 一旦スティックのキャリブレーションを初期化
-					pad.RAxisOffset.x = 0.0f;
-					pad.RAxisOffset.y = 0.0f;
-					pad.LAxisOffset.x = 0.0f;
-					pad.LAxisOffset.y = 0.0f;
+					p.RAxisOffset.x = 0.0f;
+					p.RAxisOffset.y = 0.0f;
+					p.LAxisOffset.x = 0.0f;
+					p.LAxisOffset.y = 0.0f;
 
 					break;
 				}
@@ -171,6 +195,8 @@ public class PadConfig : MonoBehaviour {
 
 		yield return new WaitForSeconds(1.0f);
 
+		PadManager.PadData pad = PadManager.GetPadData((PadManager.Index)padIndex);
+
 		//-----------------------------
 		// 右スティックY軸チェック
 		//-----------------------------
@@ -182,7 +208,7 @@ public class PadConfig : MonoBehaviour {
 			
 			if (AxisConfigIndex == 1) { pad.RightAxisY = "_1"; } else { pad.RightAxisY = ""; }
 			// 見つかった
-			if (PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)padIndex, true).y <= -0.8f)
+			if (PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)padIndex, true).y <= -0.5f)
 			{
 				Debug.Log("右スティックY軸めっけ");
 
@@ -223,7 +249,7 @@ public class PadConfig : MonoBehaviour {
 		//-----------------------------
 		while (true)
 		{
-			if (Mathf.Abs(PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)padIndex).y) <= 0.8f)
+			if (Mathf.Abs(PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)padIndex).y) <= 0.5f)
 			{
 				break;
 			}
@@ -241,7 +267,7 @@ public class PadConfig : MonoBehaviour {
 			//PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.RightAxisX = "_1"; } else { pad.RightAxisX = ""; }
 			// 見つかった
-			if (PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)padIndex, true).x >= 0.8f)
+			if (PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)padIndex, true).x >= 0.5f)
 			{
 
 				AxisConfigStep++;
@@ -284,7 +310,7 @@ public class PadConfig : MonoBehaviour {
 			//PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.PovY = "_1"; } else { pad.PovY = ""; }
 			// 見つかった
-			if (PadManager.GetAxis(PadManager.Axis.POV, (PadManager.Index)padIndex, true).y <= -0.8f)
+			if (PadManager.GetAxis(PadManager.Axis.POV, (PadManager.Index)padIndex, true).y <= -0.5f)
 			{
 
 				AxisConfigStep++;
@@ -310,7 +336,7 @@ public class PadConfig : MonoBehaviour {
 		// 真ん中に戻すまで待つ
 		while (true)
 		{
-			if (Mathf.Abs(PadManager.GetAxis(PadManager.Axis.POV, (PadManager.Index)padIndex).y) <= 0.8f)
+			if (Mathf.Abs(PadManager.GetAxis(PadManager.Axis.POV, (PadManager.Index)padIndex).y) <= 0.5f)
 			{
 				break;
 			}
@@ -327,7 +353,7 @@ public class PadConfig : MonoBehaviour {
 			//PadData pad = instance.padData[(int)padIndex];
 			if (AxisConfigIndex == 1) { pad.PovX = "_1"; } else { pad.PovX = ""; }
 			// 見つかった
-			if (PadManager.GetAxis(PadManager.Axis.POV, (PadManager.Index)padIndex, true).x >= 0.8f)
+			if (PadManager.GetAxis(PadManager.Axis.POV, (PadManager.Index)padIndex, true).x >= 0.5f)
 			{
 
 				AxisConfigStep++;
@@ -360,7 +386,7 @@ public class PadConfig : MonoBehaviour {
 
 			// 360かも
 			//PadData pad = instance.padData[(int)padIndex];
-			if (Mathf.Abs(PadManager.GetAxis(PadManager.Axis.LRTrigger, (PadManager.Index)padIndex, true).x) >= 0.8f)
+			if (Mathf.Abs(PadManager.GetAxis(PadManager.Axis.LRTrigger, (PadManager.Index)padIndex, true).x) >= 0.5f)
 			{
 
 				AxisConfigStep++;
@@ -674,6 +700,15 @@ public class PadConfig : MonoBehaviour {
 				GUI.Label(new Rect(startX + 30, startY + YOffset * iPad + 70, 100, 20), PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)iPad, true).x.ToString("0.00"));
 				GUI.Label(new Rect(startX + 30, startY + YOffset * iPad + 80, 100, 20), PadManager.GetAxis(PadManager.Axis.RightStick, (PadManager.Index)iPad, true).y.ToString("0.00"));
 
+
+				// 入力履歴
+				int iii = 0;
+				foreach (PadManager.Button btn in pad.PadHistory)
+				{
+
+					GUI.Label(new Rect(startX  -100 + 50 * (pad.PadHistory.Count - iii), startY + YOffset * iPad - 50, 100, 20), btn.ToString());
+					iii++;
+				}
 
 
 				float BtnX = startX + 150;

@@ -116,6 +116,9 @@ public class PadManager : MonoBehaviour {
 		public bool[] Repeat = new bool[(int)Button.MAX]; // キーリピート
 
 
+
+		public Queue<Button> PadHistory = new Queue<Button>();
+
 //#if DEBUG
 		// スティック座標デバッグ表示
 		public class PosHistory{
@@ -330,7 +333,17 @@ public class PadManager : MonoBehaviour {
 						break;
 				}
 
+				// ボタンを押してたら履歴に入れる
+				if (pad.Now[button] == true && pad.Prev[button] != true )
+				{
+	
 
+					pad.PadHistory.Enqueue((Button)button);
+					if (pad.PadHistory.Count > 32)
+					{
+						pad.PadHistory.Dequeue();
+					}
+				}
 
 
 				//---------------------------
@@ -542,15 +555,15 @@ public class PadManager : MonoBehaviour {
 			}
 			else
 			{
-				axisXY.x = Input.GetAxisRaw(xName);
+				axisXY.x = Input.GetAxis(xName);
 
 				if (axis == Axis.POV)
 				{
-					axisXY.y = -Input.GetAxisRaw(yName);
+					axisXY.y = -Input.GetAxis(yName);
 				}
 				else
 				{
-					axisXY.y = Input.GetAxisRaw(yName);
+					axisXY.y = Input.GetAxis(yName);
 				}
 			}
 		}
