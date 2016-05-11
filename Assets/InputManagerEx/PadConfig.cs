@@ -40,6 +40,7 @@ public class PadConfig : MonoBehaviour {
 	static private int ButtonConfigStep = 0;
 	static private bool IsPushButtonAtConfig = false; // ボタン押した
 
+	public bool IsEnableDebug = false;
 
 
 	//--------------------------
@@ -463,6 +464,13 @@ public class PadConfig : MonoBehaviour {
 			if (pad.JoyStickName.Length > 0)
 			{
 
+				// 変換テーブル
+				for (int i = 0; i < (int)PadManager.Button.MAX; i++)
+				{
+					PlayerPrefs.SetInt(pad.JoyStickName + "_" + Enum.GetName(typeof(PadManager.Button), i), pad.ConvTable[i]);
+				}
+
+
 				PlayerPrefs.SetString(pad.JoyStickName + "_RightAxisX", pad.RightAxisX);
 				PlayerPrefs.SetString(pad.JoyStickName + "_RightAxisY", pad.RightAxisY);
 				PlayerPrefs.SetString(pad.JoyStickName + "_PovX", pad.PovX);
@@ -496,8 +504,8 @@ public class PadConfig : MonoBehaviour {
 	/// </summary>
 	void OnGUI()
 	{
-
 		//String pad = "";
+
 
 
 		{// FPS
@@ -567,7 +575,10 @@ public class PadConfig : MonoBehaviour {
 		else
 		{
 
-
+			if (!IsEnableDebug)
+			{
+				return;
+			}
 
 			float startY = 100;
 			float startX = 100;
@@ -727,7 +738,7 @@ public class PadConfig : MonoBehaviour {
 					}
 					else
 					{
-						GUIHelper.DrawRect(r, Color.white);
+						GUIHelper.DrawRect(r, Color.gray);
 					}
 				}
 

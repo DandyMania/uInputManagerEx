@@ -1,0 +1,39 @@
+/*
+ * Copyright (c) 2016 DandyMania
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * Latest version: https://github.com/DandyMania/uInputManagerEx/
+*/
+
+
+参考ページ 
+
+Unityでゲーム開発 -左右スティックを使う方法- 
+http://yun.cup.com/unity041.html
+
+【Unity】スクリプトからInputManagerを自動生産する 
+http://notargs.com/blog/?p=92
+
+「右スティック」の軸について調べてみる（おまけでボタン番号割り当ても）
+http://dnasoftwares.hatenablog.com/entry/2013/08/17/221430
+
+KAC 23 / 高い操作精度を実現するための実装について
+ http://www.kawaz.org/blogs/isekaf/2013/12/23/564/
+ 
